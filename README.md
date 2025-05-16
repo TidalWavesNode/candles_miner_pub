@@ -1,8 +1,8 @@
 # A binary classification neural network designed to predict whether the next hourly trading candle will be green (price goes up) or red (price goes down), based on the behavior of historical trading candles.
 
-Table of Contents
+Table of Contents:
 
-[Purpose](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-problem-statement)
+   [Purpose](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-problem-statement)
 
 [Dataset](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-dataset)
 
