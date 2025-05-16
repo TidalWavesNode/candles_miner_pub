@@ -41,7 +41,7 @@ A TVexport.csv example has been provided that contains 9257 samples of hourly ca
 Run the feature generator to add technical features:
 
 ```
-python3 feature_generator.py --csv TVexport.csv --output TVexport_with_features.csv
+python3 feature_generator.py --input TVexport.csv --output TVexport_with_features.csv
 ```
 
 ### Generated features include:
