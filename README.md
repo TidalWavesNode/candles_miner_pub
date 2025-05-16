@@ -46,39 +46,34 @@ Samples: 9,257 hourly candles
 Each row represents one hourly candle and includes both raw price data and derived features.
 
 Features Used: #once feature_generator.py has been exectued on the provided data set
-```
+`
 Feature - Description
 open - Opening price of the candle
 high - Highest price reached
 low	 - Lowest price reached
-close	- Closing price of the candle
-candle_body	- close - open
+close - Closing price of the candle
+candle_body - close - open
 candle_range - high - low
 upper_wick - high - max(open, close)
 lower_wick - min(open, close) - low
-```
+`
 ## 🎯 Target Label
 The label is generated as:
 
-```
+`
 label = 1 if close > open else 0
-```
+`
 This allows the model to learn the conditions leading to price increases or decreases.
 
 ## 🧠 Model Architecture
 We're using a feedforward neural network named CandleNet with:
 
-Input layer: 8 features
-
+`Input layer: 8 features
 Hidden layer: Customizable size (default: 128 neurons)
-
 Output layer: 1 neuron for binary prediction
-
 Activation: ReLU between layers
-
 Loss Function: BCEWithLogitsLoss
-
-Optimizer: Typically Adam or SGD
+Optimizer: Typically Adam or SGD`
 
 ## ⚙️ Training Loop
 Training proceeds as follows:
