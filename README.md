@@ -1,13 +1,18 @@
 # A binary classification neural network designed to predict whether the next hourly trading candle will be green (price goes up) or red (price goes down), based on the behavior of historical trading candles.
 
-## 📈 Problem Statement
-We frame this as a binary classification task:
+Table of Contents
+[Purpose](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-problem-statement)
+
+
+
+## 📈 Purpose
+We view this as a binary classification task:
 
 1 = Green Candle (Close > Open)
 
 0 = Red Candle (Close ≤ Open)
 
-The model learns from historical hourly candles and aims to identify patterns that indicate bullish or bearish movement in the next future.
+The model learns from user-provided historical hourly candles and aims to identify patterns that indicate bullish or bearish movement in the next future.
 
 ## 🔢 Dataset
 File: MTexport.csv
