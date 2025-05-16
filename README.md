@@ -50,7 +50,7 @@ Features Used: #once feature_generator.py has been exectued on the provided data
 Feature - Description
 open - Opening price of the candle
 high - Highest price reached
-low	 - Lowest price reached
+low - Lowest price reached
 close - Closing price of the candle
 candle_body - close - open
 candle_range - high - low
@@ -79,26 +79,23 @@ Optimizer: Typically Adam or SGD
 ## ⚙️ Training Loop
 Training proceeds as follows:
 
+```
 Normalize inputs using StandardScaler
-
 Batch size: Typically 64 samples
-
 Forward pass → raw logits
-
 Loss computed with BCEWithLogitsLoss
-
 Backpropagation and optimizer update
-
 Accuracy: Threshold predictions at 0.5
+```
 
 ## 💡 What It Learns
 The model is trained to recognize candle formations, such as:
 
+```
 Long upper/lower wicks
-
 Large vs. small body ratios
-
 Candle volatility
+```
 
 These insights help it estimate the likelihood of upward or downward movement in the next hour.
 
