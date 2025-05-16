@@ -45,7 +45,7 @@ Samples: 9,257 hourly candles
 
 Each row represents one hourly candle and includes both raw price data and derived features.
 
-Features Used: #once feature_generator.py has been exectued on the provided data set
+Features Used: (Once feature_generator.py has been executed on the provided dataset)
 ```
 Feature - Description
 open - Opening price of the candle
