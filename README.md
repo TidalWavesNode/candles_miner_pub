@@ -2,7 +2,7 @@
 
 Table of Contents:
 
-   [Purpose](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-problem-statement)
+[Purpose](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-problem-statement)
 
 [Dataset](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-dataset)
 
@@ -29,8 +29,6 @@ Table of Contents:
 [Predict the next 24-Hourly Candles](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-predict-the-next-24-hourly-candles)
 
 [Disclaimer](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-disclaimer)
-
-[]()
 
 ## 📈 Purpose
 We view this as a binary classification task:
