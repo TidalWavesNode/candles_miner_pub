@@ -1,4 +1,4 @@
-#A lightweight machine learning pipeline that trains a model to predict hourly crypto candle directions (Green or Red) using engineered features. 
+# A lightweight machine learning pipeline that trains a model to predict hourly crypto candle directions (Green or Red) using engineered features. 
 
 ## 🧰 Requirements
 Ubuntu 22.04
