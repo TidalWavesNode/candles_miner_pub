@@ -35,7 +35,7 @@ Create a CSV file named TVexport.csv with hourly OHLC data. Example format:
 
 time,open,high,low,close
 
-TVexport.csv example has been provided that contains 9257 samples of hourly candles or you can export this from TradingView or any exchange’s API (e.g., Kraken, Coinbase, Binance, MEXC).
+A TVexport.csv example has been provided that contains 9257 samples of hourly candles. You can also export this from TradingView or any exchange’s API (e.g., Kraken, Coinbase, Binance, MEXC).
 
 ### ⚙️ Feature Engineering
 Run the feature generator to add technical features:
@@ -46,7 +46,9 @@ python3 feature_generator.py --csv TVexport.csv --output TVexport_with_features.
 
 ### Generated features include:
 Candle body & range
+
 Wick lengths
+
 Ratio metrics (close/open, high/low)
 
 ### 🧠 Train the Model
