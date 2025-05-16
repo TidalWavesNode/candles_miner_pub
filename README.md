@@ -32,9 +32,8 @@ pip install pandas torch scikit-learn numpy
 
 ### 📄 Prepare Your Dataset
 Create a CSV file named TVexport.csv with hourly OHLC data. Example format:
-
 time,open,high,low,close
-Export this from TradingView or your exchange’s API (e.g., Binance, MEXC).
+TVexport.csv example has been provided that contains 9257 samples of hourly candles or you can export this from TradingView or any exchange’s API (e.g., Kraken, Coinbase, Binance, MEXC).
 
 ### ⚙️ Feature Engineering
 Run the feature generator to add technical features:
@@ -52,7 +51,7 @@ Ratio metrics (close/open, high/low)
 Train the model using engineered data:
 
 ```
-ython3 train_updated.py --csv TVexport_with_features.csv --epochs 150 --batch-size 64 --lr 0.0005 --hidden 128
+python3 train_updated.py --csv TVexport_with_features.csv --epochs 150 --batch-size 64 --lr 0.0005 --hidden 128
 ```
 
 Once complete this saves your model to model.pth.
