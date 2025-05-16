@@ -4,7 +4,33 @@ Table of Contents
 
 [Purpose](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-problem-statement)
 
+[Dataset](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-dataset)
 
+[Target Label](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-target-label)
+
+[Model Architecture](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-model-architecture)
+
+[Training Loop](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#%EF%B8%8F-training-loop)
+
+[What it Learns](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-what-it-learns)
+
+[Getting Started](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-getting-started)
+
+[Requirements](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-requirements)
+
+[Setup Instructions](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#%EF%B8%8F-setup-instructions)
+
+[Prepare Your Dataset](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-prepare-your-dataset)
+
+[Feature Engineering](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#%EF%B8%8F-feature-engineering)
+
+[Train the Model](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-train-the-model)
+
+[Predict the next 24-Hourly Candles](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-predict-the-next-24-hourly-candles)
+
+[Disclaimer](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-disclaimer)
+
+[]()
 
 ## 📈 Purpose
 We view this as a binary classification task:
