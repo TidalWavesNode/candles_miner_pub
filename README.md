@@ -13,18 +13,18 @@ A simple deep learning model that predicts if the next trading candle will be gr
 
 ## Setup on Ubuntu 22.04
 
-# Install Python and pip
+### Install Python and pip
 ```sudo apt update && sudo apt install -y python3 python3-pip python3-venv```
 
-# Clone the repo
+### Clone the repo
 ```git clone https://github.com/YOUR_USERNAME/candle-predictor.git```
 ``cd candle-predictor``
 
-# Create virtual environment
+### Create virtual environment
 ``python3 -m venv env``
 ``source env/bin/activate``
 
-# Install required packages
+### Install required packages
 ``pip install -r requirements.txt``
 
 
