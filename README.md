@@ -66,7 +66,7 @@ label = 1 if close > open else 0
 This allows the model to learn the conditions leading to price increases or decreases.
 
 ## 🧠 Model Architecture
-We're using a feedforward neural network named CandleNet with:
+We're using a feedforward neural network with:
 ```
 Input layer: 8 features
 Hidden layer: Customizable size (default: 128 neurons)
