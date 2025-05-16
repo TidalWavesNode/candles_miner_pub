@@ -8,17 +8,27 @@ pip, venv
 🛠️ Setup Instructions
 1. Clone the Repository
 
-```git clone https://github.com/NeuralNexusII/candles_miner.git```
-```cd candles_miner```
+```
+git clone https://github.com/NeuralNexusII/candles_miner.git
+```
+```
+cd candles_miner
+```
 
 2. Create and Activate a Virtual Environment
 
-```python3 -m venv env```
-```source env/bin/activate```
+```
+python3 -m venv env
+```
+```
+source env/bin/activate
+```
 
 3. Install Dependencies
 
-```pip install pandas torch scikit-learn numpy```
+```
+pip install pandas torch scikit-learn numpy
+```
 
 📄 Prepare Your Dataset
 Create a CSV file named TVexport.csv with hourly OHLC data. Example format:
@@ -29,7 +39,9 @@ Export this from TradingView or your exchange’s API (e.g., Binance, MEXC).
 ⚙️ Feature Engineering
 Run the feature generator to add technical features:
 
-```python3 feature_generator.py --csv TVexport.csv --output TVexport_with_features.csv```
+```
+python3 feature_generator.py --csv TVexport.csv --output TVexport_with_features.csv
+```
 
 Generated features include:
 Candle body & range
@@ -39,7 +51,9 @@ Ratio metrics (close/open, high/low)
 🧠 Train the Model
 Train the model using engineered data:
 
-```python3 train_updated.py --csv TVexport_with_features.csv --epochs 150 --batch-size 64 --lr 0.0005 --hidden 128```
+```
+ython3 train_updated.py --csv TVexport_with_features.csv --epochs 150 --batch-size 64 --lr 0.0005 --hidden 128
+```
 
 This saves your model to model.pth.
 
