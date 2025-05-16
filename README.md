@@ -48,15 +48,15 @@ Samples: 9,257 hourly candles
 Each row represents one hourly candle and includes both raw price data and derived features.
 
 Features Used: #once feature_generator.py has been exectued on the provided data set
-Feature	 - Description
-open	- Opening price of the candle
-high	- Highest price reached
+Feature - Description
+open - Opening price of the candle
+high - Highest price reached
 low	 - Lowest price reached
 close	- Closing price of the candle
 candle_body	- close - open
-candle_range -	high - low
-upper_wick -	high - max(open, close)
-lower_wick -	min(open, close) - low
+candle_range - high - low
+upper_wick - high - max(open, close)
+lower_wick - min(open, close) - low
 
 ## 🎯 Target Label
 The label is generated as:
