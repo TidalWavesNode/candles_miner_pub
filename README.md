@@ -45,7 +45,8 @@ This saves your model to model.pth.
 
 🔮 Predict the Next 24 Hourly Candles
 
-```python3 predicthourly.py```
+```python3 predicthourly.py
+```
 Displays hourly predictions (Green/Red)
 Saves them to predictions_hourly.txt
 
