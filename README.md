@@ -1,4 +1,92 @@
-# A lightweight machine learning pipeline that trains a model to predict hourly crypto candle directions (Green or Red) using engineered features. 
+# A binary classification neural network designed to predict whether the next hourly trading candle will be green (price goes up) or red (price goes down), based on the behavior of historical trading candles.
+
+## 📈 Problem Statement
+We frame this as a binary classification task:
+
+1 = Green Candle (Close > Open)
+
+0 = Red Candle (Close ≤ Open)
+
+The model learns from historical hourly candles and aims to identify patterns that indicate bullish or bearish movement in the next future.
+
+## 🔢 Dataset
+File: MTexport.csv
+Samples: 9,257 hourly candles
+
+Each row represents one hourly candle and includes both raw price data and derived features.
+
+Features Used: #once feature_generator.py has been exectued on the provided data set
+Feature	 - Description
+open	- Opening price of the candle
+high	- Highest price reached
+low	 - Lowest price reached
+close	- Closing price of the candle
+candle_body	- close - open
+candle_range -	high - low
+upper_wick -	high - max(open, close)
+lower_wick -	min(open, close) - low
+
+## 🎯 Target Label
+The label is generated as:
+
+```
+label = 1 if close > open else 0
+```
+This allows the model to learn the conditions leading to price increases or decreases.
+
+## 🧠 Model Architecture
+We're using a feedforward neural network named CandleNet with:
+
+Input layer: 8 features
+
+Hidden layer: Customizable size (default: 128 neurons)
+
+Output layer: 1 neuron for binary prediction
+
+Activation: ReLU between layers
+
+Loss Function: BCEWithLogitsLoss
+
+Optimizer: Typically Adam or SGD
+
+## ⚙️ Training Loop
+Training proceeds as follows:
+
+Normalize inputs using StandardScaler
+
+Batch size: Typically 64 samples
+
+Forward pass → raw logits
+
+Loss computed with BCEWithLogitsLoss
+
+Backpropagation and optimizer update
+
+Accuracy: Threshold predictions at 0.5
+
+## 💡 What It Learns
+The model is trained to recognize candle formations, such as:
+
+Long upper/lower wicks
+
+Large vs. small body ratios
+
+Candle volatility
+
+These insights help it estimate the likelihood of upward or downward movement in the next hour.
+
+## 🚀 Getting Started
+Clone the repo
+
+Install dependencies
+
+If not using the provided data set, place yours in your working directory
+
+Train the model
+
+Predict daily candles
+
+
 
 ## 🧰 Requirements
 Ubuntu 22.04
@@ -100,3 +188,5 @@ Hour 23: Green
 Hour 24: Red
 ```
 
+## 📌 Disclaimer
+This model is educational and experimental. It does not constitute financial advice. Use it at your own risk.
