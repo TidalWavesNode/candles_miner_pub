@@ -32,7 +32,9 @@ pip install pandas torch scikit-learn numpy
 
 ### 📄 Prepare Your Dataset
 Create a CSV file named TVexport.csv with hourly OHLC data. Example format:
+
 time,open,high,low,close
+
 TVexport.csv example has been provided that contains 9257 samples of hourly candles or you can export this from TradingView or any exchange’s API (e.g., Kraken, Coinbase, Binance, MEXC).
 
 ### ⚙️ Feature Engineering
