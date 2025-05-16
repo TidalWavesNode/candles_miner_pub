@@ -31,7 +31,7 @@ pip install pandas torch scikit-learn numpy
 ```
 
 ### 📄 Prepare Your Dataset
-Create a CSV file named TVexport.csv with hourly OHLC data. Example format:
+Create a CSV file dataset named TVexport.csv with hourly OHLC data. Example format:
 
 time,open,high,low,close
 
@@ -58,9 +58,11 @@ Train the model using engineered data:
 python3 train_updated.py --csv TVexport_with_features.csv --epochs 150 --batch-size 64 --lr 0.0005 --hidden 128
 ```
 
-Once complete this saves your model to model.pth.
+Adjust training parameters as needed to achieve desired results.
 
-### 🔮 Predict the Next 24 Hourly Candles
+Once training is complete, the model is saved as model.pth.
+
+### 🔮 Predict the Next 24-Hourly Candles
 
 ```
 python3 predicthourly.py
@@ -70,10 +72,31 @@ Saves them to predictions_hourly.txt
 
 ✅ Sample Output
 
-```📤 Predictions:
+```
+📤 Predictions:
 Hour 1: Green
-Hour 2: Red
-...
+Hour 2: Green
+Hour 3: Green
+Hour 4: Green
+Hour 5: Red
+Hour 6: Green
+Hour 7: Red
+Hour 8: Red
+Hour 9: Red
+Hour 10: Red
+Hour 11: Red
+Hour 12: Green
+Hour 13: Red
+Hour 14: Red
+Hour 15: Green
+Hour 16: Green
+Hour 17: Red
+Hour 18: Green
+Hour 19: Green
+Hour 20: Green
+Hour 21: Red
+Hour 22: Red
+Hour 23: Green
 Hour 24: Red
 ```
 
