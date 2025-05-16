@@ -74,5 +74,6 @@ Saves them to predictions_hourly.txt
 Hour 1: Green
 Hour 2: Red
 ...
-Hour 24: Red```
+Hour 24: Red
+```
 
