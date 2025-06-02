@@ -121,7 +121,7 @@ pip, venv
 ### Clone the Repository
 
 ```
-git clone https://github.com/NeuralNexusII/candles_miner.git
+git clone https://github.com/TidalWavesNode/candles_miner_pub
 ```
 ```
 cd candles_miner
