@@ -37,74 +37,86 @@ We view this as a binary classification task:
 
 0 = Red Candle (Close ≤ Open)
 
-The model learns from user-provided historical hourly candles and aims to identify patterns that indicate bullish or bearish movement in the next future.
+The model learns from user-provided historical hourly candles and aims to identify patterns that indicate bullish or bearish movement in the future.
 
 ## 🔢 Dataset
-File: MTexport.csv
-Samples: 9,257 hourly candles
+**File**: `TVexport.csv`  
+**Samples**: 9,257 hourly candles
 
 Each row represents one hourly candle and includes both raw price data and derived features.
 
-Features Used: (Once feature_generator.py has been executed on the provided dataset)
-```
-Feature - Description
-open - Opening price of the candle
-high - Highest price reached
-low - Lowest price reached
-close - Closing price of the candle
-candle_body - close - open
-candle_range - high - low
-upper_wick - high - max(open, close)
-lower_wick - min(open, close) - low
-```
-## 🎯 Target Label
-The label is generated as:
+**Features Used** (after running `feature_generator.py`):
 
-`
+| Feature               | Description                            |
+|-----------------------|----------------------------------------|
+| `open`                | Opening price of the candle            |
+| `high`                | Highest price reached                  |
+| `low`                 | Lowest price reached                   |
+| `close`               | Closing price of the candle            |
+| `candle_body`         | `close - open`                         |
+| `candle_range`        | `high - low`                           |
+| `upper_wick`          | `high - max(open, close)`              |
+| `lower_wick`          | `min(open, close) - low`               |
+| `close_to_open_ratio` | Ratio of `close / open`                |
+| `high_to_low_ratio`   | Ratio of `high / low`                  |
+
+---
+## 🎯 Target Label
+The model classifies each candle as **Green** or **Red** using the following rule:
+
+```
 label = 1 if close > open else 0
-`
+```
+
 This allows the model to learn the conditions leading to price increases or decreases.
 
 ## 🧠 Model Architecture
-We're using a feedforward neural network with:
+The model is a deep feedforward neural network with a funnel-shaped structure:
 ```
-Input layer: 8 features
-Hidden layer: Customizable size (default: 128 neurons)
-Output layer: 1 neuron for binary prediction
-Activation: ReLU between layers
+Input layer: 10 features
+Hidden layers:
+Linear(10 → 256) → ReLU → Dropout(0.2)
+Linear(256 → 256) → ReLU → Dropout(0.2)
+Linear(256 → 128) → ReLU → Dropout(0.1)
+Linear(128 → 64) → ReLU
+Output layer: Linear(64 → 1)
+Final Activation: Sigmoid (for binary classification)
+Regularization: Dropout layers to reduce overfitting
 Loss Function: BCEWithLogitsLoss
-Optimizer: Typically Adam or SGD
+Optimizer: Adam (or optionally SGD)
 ```
 
 ## ⚙️ Training Loop
 Training proceeds as follows:
 
 ```
-Normalize inputs using StandardScaler
-Batch size: Typically 64 samples
+Inputs are normalized using StandardScaler
+Batch size: 64
+Epochs: Configurable
 Forward pass → raw logits
-Loss computed with BCEWithLogitsLoss
-Backpropagation and optimizer update
-Accuracy: Threshold predictions at 0.5
+Loss is computed with BCEWithLogitsLoss
+Backpropagation with optimizer step
+Accuracy is calculated using a 0.5 threshold on sigmoid output
 ```
 
 ## 💡 What It Learns
-The model is trained to recognize candle formations, such as:
+The model is trained to recognize key price action patterns such as:
 
 ```
 Long upper/lower wicks
-Large vs. small body ratios
-Candle volatility
+Body-to-wick ratios
+High volatility ranges
+Momentum patterns
 ```
 
-These insights help it estimate the likelihood of upward or downward movement in the next hour.
+These learned patterns enable the model to estimate the probability of the next hourly candle being green or red with improved accuracy, thanks to the deeper and regularized network architecture.
 
 ## 🚀 Getting Started
 Clone the repo
 
 Install dependencies
 
-If not using the provided data set, place yours in your working directory
+If not using the provided data set, place yours in your working directory.
 
 Train the model
 
@@ -147,7 +159,7 @@ Create a CSV file dataset named TVexport.csv with hourly OHLC data. Example form
 
 time,open,high,low,close
 
-A TVexport.csv example has been provided that contains 9257 samples of hourly candles. You can also export this from TradingView or any exchange’s API (e.g., Kraken, Coinbase, Binance, MEXC).
+A TVexport.csv example has been provided, containing 9,257 samples of hourly candles. You can also export this from TradingView or any exchange’s API (e.g., Kraken, Coinbase, Binance, MEXC).
 
 ### ⚙️ Feature Engineering
 Run the feature generator to add technical features:
@@ -213,4 +225,4 @@ Hour 24: Red
 ```
 
 ## 📌 Disclaimer
-This model is educational and experimental. It does not constitute financial advice. Use it at your own risk.
+This model is educational and experimental. It does not constitute financial advice. Use at your own risk.
