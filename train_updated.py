@@ -42,25 +42,25 @@ class CandleDataset(Dataset):
         return self.X[idx], self.y[idx]
 
 class CandleNet(nn.Module):
-    def __init__(self, input_size, hidden_size):
+    def __init__(self, input_size):
         super(CandleNet, self).__init__()
         self.model = nn.Sequential(
-            nn.Linear(input_size, hidden_size),
-            nn.ReLU(),
-            nn.Dropout(0.2),
-
-            nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(),
-            nn.Dropout(0.2),
-
-            nn.Linear(hidden_size, hidden_size // 2),
-            nn.ReLU(),
-            nn.Dropout(0.1),
-
-            nn.Linear(hidden_size // 2, hidden_size // 4),
+            nn.Linear(input_size, 256),
+            nn.BatchNorm1d(256),
             nn.ReLU(),
 
-            nn.Linear(hidden_size // 4, 1)
+            nn.Linear(256, 256),
+            nn.ReLU(),
+
+            nn.Linear(256, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+
+            nn.Linear(128, 64),
+            nn.BatchNorm1d(64),
+            nn.ReLU(),
+
+            nn.Linear(64, 1)
         )
 
     def forward(self, x):
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     dataset = CandleDataset(args.csv)
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
 
-    model = CandleNet(input_size=dataset.X.shape[1], hidden_size=args.hidden)
+    model = CandleNet(input_size=dataset.X.shape[1])
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     criterion = nn.BCEWithLogitsLoss()
 
