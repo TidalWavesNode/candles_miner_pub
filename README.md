@@ -51,7 +51,6 @@ Each row represents one hourly candle and includes both raw price data and deriv
 | `close_to_open_ratio` | Ratio of `close / open`                |
 | `high_to_low_ratio`   | Ratio of `high / low`                  |
 
----
 ## 🎯 Target Label
 The model classifies each candle as **Green** or **Red** using the following rule:
 
