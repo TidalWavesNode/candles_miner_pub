@@ -1,59 +1,77 @@
+# predicthourly.py
+
 import torch
-import torch.nn as nn
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
+from torch import nn
+from sklearn.preprocessing import MinMaxScaler
 
 class CandleNet(nn.Module):
-    def __init__(self, input_size, hidden_size=128):
-        super().__init__()
+    def __init__(self, input_size=10):
+        super(CandleNet, self).__init__()
         self.model = nn.Sequential(
-            nn.Linear(input_size, hidden_size),
+            nn.Linear(input_size, 256),
+            nn.BatchNorm1d(256),
             nn.ReLU(),
-            nn.Linear(hidden_size, 1)
+            nn.Linear(256, 256),
+            nn.ReLU(),
+            nn.Linear(256, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Linear(128, 64),
+            nn.BatchNorm1d(64),
+            nn.ReLU(),
+            nn.Linear(64, 1)
         )
 
     def forward(self, x):
         return self.model(x)
 
-def predict_24_hourly(csv_path="TVexport.csv", model_path="model.pth"):
+def predict_24_hourly():
     print("📊 Predicting the next 24 hourly candles...")
 
+    csv_path = "TVexport_with_features.csv"
+    model_path = "model.pth"
+
     df = pd.read_csv(csv_path)
-    print("🧮 CSV Columns:", df.columns.tolist())
-    df = df.fillna(method='ffill').fillna(method='bfill')
+    print(f"🧮 CSV Columns: {list(df.columns)}")
 
-    df["candle_body"] = df["close"] - df["open"]
-    df["candle_range"] = df["high"] - df["low"]
-    df["upper_wick"] = df["high"] - df[["open", "close"]].max(axis=1)
-    df["lower_wick"] = df[["open", "close"]].min(axis=1) - df["low"]
-    df["close_to_open_ratio"] = df["close"] / df["open"]
-    df["high_to_low_ratio"] = df["high"] / df["low"]
+    # Fill missing values safely
+    df = df.ffill().bfill()
 
-    df = df.replace([np.inf, -np.inf], np.nan).dropna()
+    # Keep the last 24 rows for prediction
+    last_24 = df.iloc[-24:].copy()
 
-    features = df[[
+    features = [
         "candle_body", "candle_range", "upper_wick", "lower_wick",
-        "close_to_open_ratio", "high_to_low_ratio", "open", "close"
-    ]].values.astype(np.float32)
+        "close_to_open_ratio", "high_to_low_ratio", "open", "high", "low", "close"
+    ]
 
-    scaler = StandardScaler()
-    features = scaler.fit_transform(features)
+    X = last_24[features].values.astype(np.float32)
+    scaler = MinMaxScaler()
+    X_scaled = scaler.fit_transform(X)
 
-    last_24 = torch.tensor(features[-24:], dtype=torch.float32)
+    X_tensor = torch.tensor(X_scaled, dtype=torch.float32)
 
-    model = CandleNet(input_size=last_24.shape[1])
+    # Load model
+    model = CandleNet(input_size=len(features))
     model.load_state_dict(torch.load(model_path))
     model.eval()
 
-    predictions = torch.sigmoid(model(last_24)).detach().numpy().flatten()
-    labels = ["Green" if p > 0.5 else "Red" for p in predictions]
+    # Predict
+    with torch.no_grad():
+        outputs = model(X_tensor).squeeze()
+        predictions = torch.sigmoid(outputs).numpy()
+        classes = ["Green" if p >= 0.5 else "Red" for p in predictions]
 
+    # Output results
+    for i, pred in enumerate(classes, 1):
+        print(f"Hour {i}: {pred}")
+
+    # Save results
     with open("predictions_hourly.txt", "w") as f:
-        for i, label in enumerate(labels, 1):
-            line = f"Hour {i}: {label}"
-            print(line)
-            f.write(line + "\n")
+        for i, pred in enumerate(classes, 1):
+            f.write(f"Hour {i}: {pred}\n")
 
     print("✅ Predictions saved to predictions_hourly.txt")
 
