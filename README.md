@@ -1,34 +1,21 @@
 ## A binary classification neural network designed to predict whether the next hourly trading candle will be green (price goes up) or red (price goes down), based on the behavior of historical trading candles.
 
-Table of Contents:
+## 📚 Table of Contents
 
-[Purpose](https://github.com/TidalWavesNode/candles_miner_pub#-purpose)
-
-[Dataset](https://github.com/TidalWavesNode/candles_miner_pub#-dataset)
-
-[Target Label](https://github.com/TidalWavesNode/candles_miner_pub#-target-label)
-
-[Model Architecture](https://github.com/TidalWavesNode/candles_miner_pub#-model-architecture)
-
-[Training Loop](https://github.com/TidalWavesNode/candles_miner_pub#%EF%B8%8F-training-loop)
-
-[What it Learns](https://github.com/TidalWavesNode/candles_miner_pub#-what-it-learns)
-
-[Getting Started](https://github.com/TidalWavesNode/candles_miner_pub#-getting-started)
-
-[Requirements](https://github.com/TidalWavesNode/candles_miner_pub#-requirements)
-
-[Setup Instructions](https://github.com/TidalWavesNode/candles_miner_pub#clone-the-repository)
-
-[Prepare Your Dataset](https://github.com/TidalWavesNode/candles_miner_pub#-prepare-your-dataset)
-
-[Feature Engineering](https://github.com/TidalWavesNode/candles_miner_pub#%EF%B8%8F-feature-engineering)
-
-[Train the Model](https://github.com/TidalWavesNode/candles_miner_pub#-train-the-model)
-
-[Predict the next 24-Hourly Candles](https://github.com/TidalWavesNode/candles_miner_pub#-predict-the-next-24-hourly-candles)
-
-[Disclaimer](https://github.com/TidalWavesNode/candles_miner_pub#-disclaimer)
+- [🎯 Purpose](#-purpose)
+- [📊 Dataset](#-dataset)
+- [🟩 Target Label](#-target-label)
+- [🧠 Model Architecture](#-model-architecture)
+- [⚙️ Training Loop](#%EF%B8%8F-training-loop)
+- [🔍 What It Learns](#-what-it-learns)
+- [🚀 Getting Started](#-getting-started)
+  - [📦 Requirements](#-requirements)
+  - [🔧 Setup Instructions](#clone-the-repository)
+  - [🧹 Prepare Your Dataset](#-prepare-your-dataset)
+  - [🛠️ Feature Engineering](#%EF%B8%8F-feature-engineering)
+  - [🏋️‍♂️ Train the Model](#-train-the-model)
+  - [🔮 Predict the Next 24-Hourly Candles](#-predict-the-next-24-hourly-candles)
+- [⚠️ Disclaimer](#-disclaimer)
 
 ## 📈 Purpose
 We view this as a binary classification task:
