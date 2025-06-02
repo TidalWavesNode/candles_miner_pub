@@ -7,7 +7,7 @@ from torch import nn
 from sklearn.preprocessing import MinMaxScaler
 
 class CandleNet(nn.Module):
-    def __init__(self, input_size=10):
+    def __init__(self, input_size=8):
         super(CandleNet, self).__init__()
         self.model = nn.Sequential(
             nn.Linear(input_size, 256),
@@ -32,36 +32,38 @@ def predict_24_hourly():
 
     csv_path = "TVexport_with_features.csv"
     model_path = "model.pth"
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     df = pd.read_csv(csv_path)
     print(f"🧮 CSV Columns: {list(df.columns)}")
 
-    # Fill missing values safely
+    # Fill missing values without deprecation warning
     df = df.ffill().bfill()
 
     # Keep the last 24 rows for prediction
     last_24 = df.iloc[-24:].copy()
 
+    # Match feature set used during training
     features = [
         "candle_body", "candle_range", "upper_wick", "lower_wick",
-        "close_to_open_ratio", "high_to_low_ratio", "open", "high", "low", "close"
+        "close_to_open_ratio", "high_to_low_ratio", "open", "close"
     ]
 
     X = last_24[features].values.astype(np.float32)
     scaler = MinMaxScaler()
     X_scaled = scaler.fit_transform(X)
 
-    X_tensor = torch.tensor(X_scaled, dtype=torch.float32)
+    X_tensor = torch.tensor(X_scaled, dtype=torch.float32).to(device)
 
     # Load model
-    model = CandleNet(input_size=len(features))
-    model.load_state_dict(torch.load(model_path))
+    model = CandleNet(input_size=len(features)).to(device)
+    model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
 
     # Predict
     with torch.no_grad():
         outputs = model(X_tensor).squeeze()
-        predictions = torch.sigmoid(outputs).numpy()
+        predictions = torch.sigmoid(outputs).cpu().numpy()
         classes = ["Green" if p >= 0.5 else "Red" for p in predictions]
 
     # Output results
