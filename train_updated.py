@@ -42,11 +42,24 @@ class CandleDataset(Dataset):
 
 class CandleNet(nn.Module):
     def __init__(self, input_size, hidden_size):
-        super().__init__()
+        super(CandleNet, self).__init__()
         self.model = nn.Sequential(
             nn.Linear(input_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(hidden_size, 1)
+            nn.Dropout(0.2),
+
+            nn.Linear(hidden_size, hidden_size),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+
+            nn.Linear(hidden_size, hidden_size // 2),
+            nn.ReLU(),
+            nn.Dropout(0.1),
+
+            nn.Linear(hidden_size // 2, hidden_size // 4),
+            nn.ReLU(),
+
+            nn.Linear(hidden_size // 4, 1)
         )
 
     def forward(self, x):
