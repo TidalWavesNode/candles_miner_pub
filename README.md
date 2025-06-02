@@ -167,7 +167,7 @@ Ratio metrics (close/open, high/low)
 Train the model using engineered data:
 
 ```
-python3 train_updated.py --csv TVexport_with_features.csv --epochs 150 --batch-size 64 --lr 0.0005 --hidden 128
+python3 train_updated.py --csv TVexport_with_features.csv --epochs 150 --batch-size 64 --lr 0.0005
 ```
 
 Adjust training parameters as needed to achieve desired results.
