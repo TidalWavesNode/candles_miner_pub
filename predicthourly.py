@@ -40,7 +40,7 @@ def predict_24_hourly():
 
     df = df.ffill().bfill()
 
-    # Keep only the latest 24 candles
+    # Select last 24 rows
     last_24 = df.iloc[-24:].copy()
 
     features = [
@@ -48,11 +48,9 @@ def predict_24_hourly():
         "close_to_open_ratio", "high_to_low_ratio", "open", "close"
     ]
 
-    # Scale features
-    scaler = StandardScaler()
     X = last_24[features].values.astype(np.float32)
+    scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
-
     X_tensor = torch.tensor(X_scaled, dtype=torch.float32)
 
     # Load model
@@ -60,17 +58,18 @@ def predict_24_hourly():
     model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
     model.eval()
 
+    # Make predictions
     with torch.no_grad():
         outputs = model(X_tensor).squeeze()
-        probabilities = torch.sigmoid(outputs).numpy()
-        classes = ["Green" if p >= 0.5 else "Red" for p in probabilities]
+        predictions = torch.sigmoid(outputs).numpy()
+        classes = ["Green" if p >= 0.5 else "Red" for p in predictions]
 
     for i, pred in enumerate(classes, 1):
-        print(f"Hour {i}: {pred} ({probabilities[i-1]:.4f})")
+        print(f"Hour {i}: {pred}")
 
     with open("predictions_hourly.txt", "w") as f:
         for i, pred in enumerate(classes, 1):
-            f.write(f"Hour {i}: {pred} ({probabilities[i-1]:.4f})\n")
+            f.write(f"Hour {i}: {pred}\n")
 
     print("✅ Predictions saved to predictions_hourly.txt")
 
