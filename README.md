@@ -2,9 +2,9 @@
 
 ## 📚 Table of Contents
 
-- [🎯 Purpose](#-purpose)
+- [🟩 Purpose](#-purpose)
 - [📊 Dataset](#-dataset)
-- [🟩 Target Label](#-target-label)
+- [🎯 Target Label](#-target-label)
 - [🧠 Model Architecture](#-model-architecture)
 - [⚙️ Training Loop](#%EF%B8%8F-training-loop)
 - [🔍 What It Learns](#-what-it-learns)
@@ -17,7 +17,7 @@
   - [🔮 Predict the Next 24-Hourly Candles](#-predict-the-next-24-hourly-candles)
 - [⚠️ Disclaimer](#-disclaimer)
 
-## 📈 Purpose
+## 🎯 Purpose
 We view this as a binary classification task:
 
 1 = Green Candle (Close > Open)
@@ -26,7 +26,7 @@ We view this as a binary classification task:
 
 The model learns from user-provided historical hourly candles and aims to identify patterns that indicate bullish or bearish movement in the future.
 
-## 🔢 Dataset
+## 📊 Dataset
 **File**: `TVexport.csv`  
 **Samples**: 9,257 hourly candles
 
@@ -86,7 +86,7 @@ Backpropagation with optimizer step
 Accuracy is calculated using a 0.5 threshold on sigmoid output
 ```
 
-## 💡 What It Learns
+## 🔍 What It Learns
 The model is trained to recognize key price action patterns such as:
 
 ```
@@ -111,7 +111,7 @@ Predict daily candles
 
 
 
-## 🧰 Requirements
+## 📦 Requirements
 Ubuntu 22.04
 Python 3.10+
 pip, venv
@@ -141,14 +141,14 @@ source env/bin/activate
 pip install pandas torch scikit-learn numpy
 ```
 
-### 📄 Prepare Your Dataset
+### 🧹 Prepare Your Dataset
 Create a CSV file dataset named TVexport.csv with hourly OHLC data. Example format:
 
 time,open,high,low,close
 
 A TVexport.csv example has been provided, containing 9,257 samples of hourly candles. You can also export this from TradingView or any exchange’s API (e.g., Kraken, Coinbase, Binance, MEXC).
 
-### ⚙️ Feature Engineering
+### 🛠️ Feature Engineering
 Run the feature generator to add technical features:
 
 ```
@@ -162,7 +162,7 @@ Wick lengths
 
 Ratio metrics (close/open, high/low)
 
-### 🧠 Train the Model
+### 🏋️‍♂️ Train the Model
 Train the model using engineered data:
 
 ```
