@@ -25,9 +25,19 @@ def generate_features(input_csv, output_csv):
     df = df.replace([float('inf'), -float('inf')], pd.NA)
     df = df.dropna()
 
+    # Reorder columns for model
+    output_cols = [
+        "time", "open", "high", "low", "close",
+        "candle_body", "candle_range", "upper_wick", "lower_wick",
+        "close_to_open_ratio", "high_to_low_ratio"
+    ]
+    df = df[[col for col in output_cols if col in df.columns]]
+
     # Save to output
     df.to_csv(output_csv, index=False)
-    print(f"✅ Saved with features to {output_csv}")
+    print(f"✅ Features saved to {output_csv}")
+    print(f"🧪 Final columns: {list(df.columns)}")
+    print(f"🧾 Total rows after cleaning: {len(df)}")
 
 
 if __name__ == "__main__":
