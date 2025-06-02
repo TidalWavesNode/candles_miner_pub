@@ -6,23 +6,28 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 import argparse
 
+# Select device (GPU if available)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🖥️ Using device: {device}")
+
 class CandleDataset(Dataset):
     def __init__(self, csv_path):
         df = pd.read_csv(csv_path)
         print("📄 CSV Columns:", df.columns.tolist())
 
-        df = df.fillna(method='ffill').fillna(method='bfill')  # Fill missing values
+        # Fill missing values
+        df = df.ffill().bfill()
 
-        # Feature engineering
-        df["candle_body"] = df["close"] - df["open"]
-        df["candle_range"] = df["high"] - df["low"]
-        df["upper_wick"] = df["high"] - df[["open", "close"]].max(axis=1)
-        df["lower_wick"] = df[["open", "close"]].min(axis=1) - df["low"]
-        df["close_to_open_ratio"] = df["close"] / df["open"]
-        df["high_to_low_ratio"] = df["high"] / df["low"]
+        # Feature engineering (assumed already present if using TVexport_with_features.csv)
+        if 'candle_body' not in df.columns:
+            df["candle_body"] = df["close"] - df["open"]
+            df["candle_range"] = df["high"] - df["low"]
+            df["upper_wick"] = df["high"] - df[["open", "close"]].max(axis=1)
+            df["lower_wick"] = df[["open", "close"]].min(axis=1) - df["low"]
+            df["close_to_open_ratio"] = df["close"] / df["open"]
+            df["high_to_low_ratio"] = df["high"] / df["low"]
 
-        df = df.ffill().bfill()  # ✅ Updated from deprecated fillna
-        #df = df.replace([np.inf, -np.inf], np.nan).dropna()
+        df = df.replace([np.inf, -np.inf], np.nan).dropna()
 
         self.y = (df["close"] > df["open"]).astype(int).values
         self.X = df[[
@@ -46,18 +51,18 @@ class CandleNet(nn.Module):
         super(CandleNet, self).__init__()
         self.model = nn.Sequential(
             nn.Linear(input_size, 256),
-            nn.BatchNorm1d(256),
             nn.ReLU(),
+            nn.Dropout(0.2),
 
             nn.Linear(256, 256),
             nn.ReLU(),
+            nn.Dropout(0.2),
 
             nn.Linear(256, 128),
-            nn.BatchNorm1d(128),
             nn.ReLU(),
+            nn.Dropout(0.1),
 
             nn.Linear(128, 64),
-            nn.BatchNorm1d(64),
             nn.ReLU(),
 
             nn.Linear(64, 1)
@@ -68,24 +73,27 @@ class CandleNet(nn.Module):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--csv", type=str, default="TVexport.csv")
+    parser.add_argument("--csv", type=str, default="TVexport_with_features.csv")
     parser.add_argument("--epochs", type=int, default=50)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=0.001)
-    parser.add_argument("--hidden", type=int, default=128)
     args = parser.parse_args()
 
     print("📦 Loading data...")
     dataset = CandleDataset(args.csv)
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
 
-    model = CandleNet(input_size=dataset.X.shape[1])
+    model = CandleNet(input_size=dataset.X.shape[1]).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     criterion = nn.BCEWithLogitsLoss()
 
     for epoch in range(1, args.epochs + 1):
+        model.train()
         total_loss, correct = 0.0, 0
         for X, y in dataloader:
+            X = X.to(device)
+            y = y.to(device)
+
             optimizer.zero_grad()
             outputs = model(X).squeeze()
             loss = criterion(outputs, y)
