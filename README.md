@@ -155,7 +155,7 @@ Run the feature generator to add technical features:
 python3 feature_generator.py --input TVexport.csv --output TVexport_with_features.csv
 ```
 
-### Generated features include:
+#### Generated features include:
 Candle body & range
 
 Wick lengths
