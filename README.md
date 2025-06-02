@@ -1,4 +1,8 @@
-## A binary classification neural network designed to predict whether the next hourly trading candle will be green (price goes up) or red (price goes down), based on the behavior of historical trading candles.
+# Candles Base Miner
+
+A **binary classification neural network** designed to predict whether the **next hourly trading candle** will be **green** (price goes up) or **red** (price goes down), using the structure and behavior of past candles.  
+This model leverages engineered features from historical price action to anticipate short-term market movement with precision.
+
 
 ## 📚 Table of Contents
 
