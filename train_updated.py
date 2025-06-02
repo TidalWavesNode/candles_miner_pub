@@ -21,7 +21,8 @@ class CandleDataset(Dataset):
         df["close_to_open_ratio"] = df["close"] / df["open"]
         df["high_to_low_ratio"] = df["high"] / df["low"]
 
-        df = df.replace([np.inf, -np.inf], np.nan).dropna()
+        df = df.ffill().bfill()  # ✅ Updated from deprecated fillna
+        #df = df.replace([np.inf, -np.inf], np.nan).dropna()
 
         self.y = (df["close"] > df["open"]).astype(int).values
         self.X = df[[
