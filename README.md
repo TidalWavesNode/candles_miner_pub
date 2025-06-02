@@ -2,33 +2,33 @@
 
 Table of Contents:
 
-[Purpose](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-problem-statement)
+[Purpose](https://github.com/TidalWavesNode/candles_miner_pub#-purpose)
 
-[Dataset](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-dataset)
+[Dataset](https://github.com/TidalWavesNode/candles_miner_pub#-dataset)
 
-[Target Label](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-target-label)
+[Target Label](https://github.com/TidalWavesNode/candles_miner_pub#-target-label)
 
-[Model Architecture](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-model-architecture)
+[Model Architecture](https://github.com/TidalWavesNode/candles_miner_pub#-model-architecture)
 
-[Training Loop](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#%EF%B8%8F-training-loop)
+[Training Loop](https://github.com/TidalWavesNode/candles_miner_pub#%EF%B8%8F-training-loop)
 
-[What it Learns](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-what-it-learns)
+[What it Learns](https://github.com/TidalWavesNode/candles_miner_pub#-what-it-learns)
 
-[Getting Started](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-getting-started)
+[Getting Started](https://github.com/TidalWavesNode/candles_miner_pub#-getting-started)
 
-[Requirements](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-requirements)
+[Requirements](https://github.com/TidalWavesNode/candles_miner_pub#-requirements)
 
-[Setup Instructions](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#%EF%B8%8F-setup-instructions)
+[Setup Instructions](https://github.com/TidalWavesNode/candles_miner_pub#clone-the-repository)
 
-[Prepare Your Dataset](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-prepare-your-dataset)
+[Prepare Your Dataset](https://github.com/TidalWavesNode/candles_miner_pub#-prepare-your-dataset)
 
-[Feature Engineering](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#%EF%B8%8F-feature-engineering)
+[Feature Engineering](https://github.com/TidalWavesNode/candles_miner_pub#%EF%B8%8F-feature-engineering)
 
-[Train the Model](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-train-the-model)
+[Train the Model](https://github.com/TidalWavesNode/candles_miner_pub#-train-the-model)
 
-[Predict the next 24-Hourly Candles](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-predict-the-next-24-hourly-candles)
+[Predict the next 24-Hourly Candles](https://github.com/TidalWavesNode/candles_miner_pub#-predict-the-next-24-hourly-candles)
 
-[Disclaimer](https://github.com/NeuralNexusII/candles_miner/blob/main/README.md#-disclaimer)
+[Disclaimer](https://github.com/TidalWavesNode/candles_miner_pub#-disclaimer)
 
 ## 📈 Purpose
 We view this as a binary classification task:
