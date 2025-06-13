@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 
+# ---- Model Definition ----
 class CandleNet(nn.Module):
     def __init__(self, input_size=10):
         super(CandleNet, self).__init__()
@@ -11,23 +12,28 @@ class CandleNet(nn.Module):
             nn.Linear(input_size, 256),
             nn.ReLU(),
             nn.Dropout(0.2),
+
             nn.Linear(256, 256),
             nn.ReLU(),
             nn.Dropout(0.2),
+
             nn.Linear(256, 128),
             nn.ReLU(),
             nn.Dropout(0.1),
+
             nn.Linear(128, 64),
             nn.ReLU(),
+
             nn.Linear(64, 1)
         )
 
     def forward(self, x):
         return self.model(x)
 
+# ---- Temperature Scaling Wrapper ----
 class TemperatureScaledModel(nn.Module):
     def __init__(self, base_model, temperature=2.0):
-        super().__init__()
+        super(TemperatureScaledModel, self).__init__()
         self.base_model = base_model
         self.temperature = temperature
 
@@ -35,44 +41,46 @@ class TemperatureScaledModel(nn.Module):
         logits = self.base_model(x)
         return logits / self.temperature
 
-def load_data(csv_path, feature_cols):
-    df = pd.read_csv(csv_path)
-    df = df.dropna()
-    df = df[feature_cols]
-    scaler = StandardScaler()
-    scaled_data = scaler.fit_transform(df.values[-24:])  # Last 24 entries
-    return torch.tensor(scaled_data, dtype=torch.float32)
-
+# ---- Prediction Function ----
 def predict_24_hourly():
     print("📊 Predicting the next 24 hourly candles...")
 
-    feature_cols = [
-        "open", "high", "low", "close", "candle_body", "candle_range",
-        "upper_wick", "lower_wick", "close_to_open_ratio", "high_to_low_ratio"
-    ]
-
+    # Load and preprocess CSV
     df = pd.read_csv("TVexport_with_features.csv")
+    features = ['open', 'high', 'low', 'close', 'candle_body', 'candle_range',
+                'upper_wick', 'lower_wick', 'close_to_open_ratio', 'high_to_low_ratio']
     print(f"🧮 CSV Columns: {list(df.columns)}")
 
-    X = load_data("TVexport_with_features.csv", feature_cols)
+    X = df[features].values[-24:]  # Last 24 rows
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
 
-    # Initialize and load model
-    base_model = CandleNet(input_size=X.shape[1])
+    # Convert to tensor
+    X_tensor = torch.tensor(X_scaled, dtype=torch.float32)
+
+    # Load model
+    base_model = CandleNet(input_size=10)
+    base_model.load_state_dict(torch.load("model.pth", map_location=torch.device("cpu")))
     model = TemperatureScaledModel(base_model, temperature=2.0)
-    model.load_state_dict(torch.load("model.pth", map_location=torch.device("cpu")))
     model.eval()
 
+    # Predict
     with torch.no_grad():
-        outputs = model(X)
-        predictions = torch.sigmoid(outputs).squeeze()
+        outputs = model(X_tensor).squeeze()
+        probs = torch.sigmoid(outputs)
 
+    # Display predictions
+    for i, prob in enumerate(probs):
+        prediction = "Green" if prob >= 0.5 else "Red"
+        confidence = prob.item() if prediction == "Green" else 1 - prob.item()
+        print(f"Hour {i+1}: {prediction} (Confidence: {confidence:.2f})")
+
+    # Optionally save
     with open("predictions_hourly.txt", "w") as f:
-        for i, p in enumerate(predictions, 1):
-            label = "Green" if p.item() > 0.5 else "Red"
-            confidence = p.item()
-            line = f"Hour {i}: {label} (Confidence: {confidence:.2f})"
-            print(line)
-            f.write(line + "\n")
+        for i, prob in enumerate(probs):
+            prediction = "Green" if prob >= 0.5 else "Red"
+            f.write(f"Hour {i+1}: {prediction}\n")
 
+# ---- Run ----
 if __name__ == "__main__":
     predict_24_hourly()
