@@ -176,41 +176,36 @@ Once training is complete, the model is saved as model.pth.
 
 ## 🔮 Predict the Next 24-Hourly Candles
 
+Once the model is trained, use predicthourly.py to generate predictions for the next 24 hourly candles based on the most recent data.
 ```
 python3 predicthourly.py
 ```
 Displays hourly predictions (Green/Red)
 Saves them to predictions_hourly.txt
 
-✅ Sample Output
+⏱️ Output Format
+Each prediction indicates whether the model expects the candle to be Green (price increase) or Red (price decrease), along with a confidence level between 0.0 and 1.0:
 
 ```
 📤 Predictions:
-Hour 1: Green
-Hour 2: Green
-Hour 3: Green
-Hour 4: Green
-Hour 5: Red
-Hour 6: Green
-Hour 7: Red
-Hour 8: Red
-Hour 9: Red
-Hour 10: Red
-Hour 11: Red
-Hour 12: Green
-Hour 13: Red
-Hour 14: Red
-Hour 15: Green
-Hour 16: Green
-Hour 17: Red
-Hour 18: Green
-Hour 19: Green
-Hour 20: Green
-Hour 21: Red
-Hour 22: Red
-Hour 23: Green
-Hour 24: Red
+Hour 1: Green (Confidence: 0.94)
+Hour 2: Red (Confidence: 0.89)
+Hour 3: Green (Confidence: 0.97)
+...
+Hour 24: Red (Confidence: 0.91)
+
 ```
+
+## 🧠 How Confidence Works
+
+Confidence is estimated using Monte Carlo Dropout, a technique where the model performs multiple forward passes (default: 30) with dropout layers still active. The standard deviation of these predictions reflects uncertainty.
+
+The confidence score is calculated as:
+```
+confidence = 1.0 - std(predictions)
+```
+
+This helps assess how reliable the model's prediction is. Lower confidence may indicate ambiguous or volatile conditions in the market.
 
 ## 📌 Disclaimer
 This model is educational and experimental. It does not constitute financial advice. Use at your own risk.
