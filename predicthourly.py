@@ -1,10 +1,9 @@
 import torch
+import torch.nn as nn
 import pandas as pd
 import numpy as np
-from torch import nn
 from sklearn.preprocessing import StandardScaler
 
-# 🧠 Updated Deep CandleNet Model
 class CandleNet(nn.Module):
     def __init__(self, input_size=10):
         super(CandleNet, self).__init__()
@@ -26,54 +25,52 @@ class CandleNet(nn.Module):
     def forward(self, x):
         return self.model(x)
 
+class TemperatureScaledModel(nn.Module):
+    def __init__(self, base_model, temperature=2.0):
+        super().__init__()
+        self.base_model = base_model
+        self.temperature = temperature
+
+    def forward(self, x):
+        logits = self.base_model(x)
+        return logits / self.temperature
+
+def load_data(csv_path, feature_cols):
+    df = pd.read_csv(csv_path)
+    df = df.dropna()
+    df = df[feature_cols]
+    scaler = StandardScaler()
+    scaled_data = scaler.fit_transform(df.values[-24:])  # Last 24 entries
+    return torch.tensor(scaled_data, dtype=torch.float32)
+
 def predict_24_hourly():
     print("📊 Predicting the next 24 hourly candles...")
 
-    csv_path = "TVexport_with_features.csv"
-    model_path = "model.pth"
-
-    df = pd.read_csv(csv_path)
-    print(f"🧮 CSV Columns: {list(df.columns)}")
-    df = df.ffill().bfill()
-
-    # Features used during training
-    features = [
-    "candle_body", "candle_range", "upper_wick", "lower_wick",
-    "close_to_open_ratio", "high_to_low_ratio", "open", "close"
+    feature_cols = [
+        "open", "high", "low", "close", "candle_body", "candle_range",
+        "upper_wick", "lower_wick", "close_to_open_ratio", "high_to_low_ratio"
     ]
-    X = df[features].tail(24).values.astype(np.float32)
 
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-    X_tensor = torch.tensor(X_scaled, dtype=torch.float32)
+    df = pd.read_csv("TVexport_with_features.csv")
+    print(f"🧮 CSV Columns: {list(df.columns)}")
 
-    model = CandleNet(input_size=len(features))
-    model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
+    X = load_data("TVexport_with_features.csv", feature_cols)
+
+    # Initialize and load model
+    base_model = CandleNet(input_size=X.shape[1])
+    model = TemperatureScaledModel(base_model, temperature=2.0)
+    model.load_state_dict(torch.load("model.pth", map_location=torch.device("cpu")))
     model.eval()
 
-    # 🔁 Enable dropout for MC sampling
-    def enable_dropout(m):
-        if isinstance(m, nn.Dropout):
-            m.train()
-    model.apply(enable_dropout)
-
-    results = []
-    for i, x in enumerate(X_tensor):
-        x = x.unsqueeze(0)
-        probs = []
-        for _ in range(30):  # 30 stochastic forward passes
-            with torch.no_grad():
-                prob = torch.sigmoid(model(x)).item()
-                probs.append(prob)
-        mean = np.mean(probs)
-        std = np.std(probs)
-        confidence = 1.0 - std
-        label = "Green" if mean >= 0.5 else "Red"
-        results.append((i + 1, label, confidence))
+    with torch.no_grad():
+        outputs = model(X)
+        predictions = torch.sigmoid(outputs).squeeze()
 
     with open("predictions_hourly.txt", "w") as f:
-        for hour, label, confidence in results:
-            line = f"Hour {hour}: {label} (Confidence: {confidence:.2f})"
+        for i, p in enumerate(predictions, 1):
+            label = "Green" if p.item() > 0.5 else "Red"
+            confidence = p.item()
+            line = f"Hour {i}: {label} (Confidence: {confidence:.2f})"
             print(line)
             f.write(line + "\n")
 
