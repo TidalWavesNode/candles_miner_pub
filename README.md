@@ -184,7 +184,7 @@ python3 predicthourly.py
 Displays hourly predictions (Green/Red)
 Saves them to predictions_hourly.txt
 
-⏱️ Output Format
+### ⏱️ Output Format
 
 Each prediction indicates whether the model expects the candle to be Green (price increase) or Red (price decrease), along with a confidence level between 0.0 and 1.0:
 
@@ -200,7 +200,7 @@ Hour 24: Red (Confidence: 0.91)
 
 ## 🧠 How Confidence Works
 
-Confidence is estimated using Monte Carlo Dropout, a technique where the model performs multiple forward passes (default: 30) with dropout layers still active. The standard deviation of these predictions reflects uncertainty. This allows validators to weigh predictions not just by candle, but also by how confident the model is.
+Confidence is estimated using a Monte Carlo Dropout technique, where the model performs multiple forward passes (default: 30) with dropout layers still active. The standard deviation of these predictions reflects uncertainty. 
 
 The confidence score is calculated as:
 ```
@@ -208,6 +208,10 @@ confidence = 1.0 - std(predictions)
 ```
 
 Confidence values range from 0.0 (no confidence) to 1.0 (high confidence).
+
+This allows validators to weigh predictions not just by candles, but also by how confident the model is.
+
+---
 
 ## 📌 Disclaimer
 This model is educational and experimental. It does not constitute financial advice. Use at your own risk.
