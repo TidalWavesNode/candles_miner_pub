@@ -47,8 +47,8 @@ def predict_24_hourly():
 
     # Load and preprocess CSV
     df = pd.read_csv("TVexport_with_features.csv")
-    features = ['open', 'high', 'low', 'close', 'candle_body', 'candle_range',
-                'upper_wick', 'lower_wick', 'close_to_open_ratio', 'high_to_low_ratio']
+    features = ['candle_body', 'candle_range', 'upper_wick', 'lower_wick',
+            'close_to_open_ratio', 'high_to_low_ratio', 'open', 'close']
     print(f"🧮 CSV Columns: {list(df.columns)}")
 
     X = df[features].values[-24:]  # Last 24 rows
