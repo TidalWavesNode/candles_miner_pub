@@ -19,6 +19,7 @@ This model leverages engineered features from historical price action to anticip
   - [🛠️ Feature Engineering](#%EF%B8%8F-feature-engineering)
   - [🏋️‍♂️ Train the Model](#-train-the-model)
   - [🔮 Predict the Next 24-Hourly Candles](#-predict-the-next-24-hourly-candles)
+  - [🧠 How Confidence Works}(#-how-confidence-works)
 - [⚠️ Disclaimer](#-disclaimer)
 
 ## 🎯 Purpose
@@ -205,7 +206,7 @@ The confidence score is calculated as:
 confidence = 1.0 - std(predictions)
 ```
 
-This helps assess how reliable the model's prediction is. Lower confidence may indicate ambiguous or volatile conditions in the market.
+This helps assess the reliability of the model's prediction. Lower confidence may indicate ambiguous or volatile market conditions.
 
 ## 📌 Disclaimer
 This model is educational and experimental. It does not constitute financial advice. Use at your own risk.
