@@ -37,10 +37,10 @@ def predict_24_hourly():
     df = df.ffill().bfill()
 
     # Features used during training
-    features = [
-        "open", "high", "low", "close", "candle_body", "candle_range",
-        "upper_wick", "lower_wick", "close_to_open_ratio", "high_to_low_ratio"
-    ]
+features = [
+    "candle_body", "candle_range", "upper_wick", "lower_wick",
+    "close_to_open_ratio", "high_to_low_ratio", "open", "close"
+]
     X = df[features].tail(24).values.astype(np.float32)
 
     scaler = StandardScaler()
