@@ -1,8 +1,8 @@
-import pandas as pd
 import torch
-import torch.nn as nn
+import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
+from torch import nn
+from sklearn.preprocessing import MinMaxScaler
 
 class CandleNet(nn.Module):
     def __init__(self, input_size=8):
@@ -11,66 +11,69 @@ class CandleNet(nn.Module):
             nn.Linear(input_size, 256),
             nn.ReLU(),
             nn.Dropout(0.2),
+
             nn.Linear(256, 256),
             nn.ReLU(),
             nn.Dropout(0.2),
+
             nn.Linear(256, 128),
             nn.ReLU(),
             nn.Dropout(0.1),
+
             nn.Linear(128, 64),
             nn.ReLU(),
+
             nn.Linear(64, 1)
         )
 
     def forward(self, x):
         return self.model(x)
 
-def enable_dropout(model):
-    """Enable dropout layers during test-time."""
-    for m in model.modules():
-        if isinstance(m, nn.Dropout):
-            m.train()
+def predict_24_hourly():
+    print("📊 Predicting the next 24 hourly candles...")
 
-def predict_24_hourly(mc_passes=30):
-    print("📊 Predicting the next 24 hourly candles with MC Dropout...")
-    df = pd.read_csv("TVexport_with_features.csv")
-    print("🧮 CSV Columns:", list(df.columns))
+    csv_path = "TVexport_with_features.csv"
+    model_path = "model.pth"
 
-    features = ['candle_body', 'candle_range', 'upper_wick', 'lower_wick',
-                'close_to_open_ratio', 'high_to_low_ratio', 'open', 'close']
+    df = pd.read_csv(csv_path)
+    print(f"🧮 CSV Columns: {list(df.columns)}")
 
-    data = df[features].copy().tail(24)
-    scaler = StandardScaler()
-    X = scaler.fit_transform(data)
-    X = torch.tensor(X, dtype=torch.float32)
+    # Fill missing values
+    df = df.ffill().bfill()
 
-    model = CandleNet(input_size=8)
-    model.load_state_dict(torch.load("model.pth", map_location=torch.device("cpu")))
+    # Use the last 24 rows for prediction
+    last_24 = df.iloc[-24:].copy()
+
+    features = [
+        "candle_body", "candle_range", "upper_wick", "lower_wick",
+        "close_to_open_ratio", "high_to_low_ratio", "open", "close"
+    ]
+    X = last_24[features].values.astype(np.float32)
+
+    # Normalize features
+    scaler = MinMaxScaler()
+    X_scaled = scaler.fit_transform(X)
+    X_tensor = torch.tensor(X_scaled, dtype=torch.float32)
+
+    # Load model
+    model = CandleNet(input_size=len(features))
+    model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
     model.eval()
-    enable_dropout(model)  # ✅ Enable dropout during eval for MC Dropout
 
-    all_probs = []
-
+    # Predict
     with torch.no_grad():
-        for _ in range(mc_passes):
-            logits = model(X).squeeze()
-            probs = torch.sigmoid(logits)
-            all_probs.append(probs.unsqueeze(0))  # Shape: [1, 24]
+        outputs = model(X_tensor).squeeze()
+        probs = torch.sigmoid(outputs).numpy()
 
-    probs_stack = torch.cat(all_probs, dim=0)  # Shape: [mc_passes, 24]
-    mean_probs = probs_stack.mean(dim=0)
-    std_probs = probs_stack.std(dim=0)  # Uncertainty
-
+    # Print results
     with open("predictions_hourly.txt", "w") as f:
-        for i in range(24):
-            label = "Green" if mean_probs[i] >= 0.5 else "Red"
-            confidence = mean_probs[i].item()
-            uncertainty = std_probs[i].item()
-            output = (f"Hour {i+1}: {label} "
-                      f"(Confidence: {confidence:.2f}, "
-                      f"Uncertainty: ±{uncertainty:.2f})")
-            print(output)
-            f.write(output + "\n")
+        for i, p in enumerate(probs, 1):
+            label = "Green" if p >= 0.5 else "Red"
+            confidence = round(p if p >= 0.5 else 1 - p, 2)
+            print(f"Hour {i}: {label} (Confidence: {confidence:.2f})")
+            f.write(f"Hour {i}: {label} (Confidence: {confidence:.2f})\n")
+
+    print("✅ Predictions saved to predictions_hourly.txt")
 
 if __name__ == "__main__":
     predict_24_hourly()
