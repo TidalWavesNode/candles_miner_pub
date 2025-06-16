@@ -4,7 +4,10 @@ import numpy as np
 from torch import nn
 from sklearn.preprocessing import MinMaxScaler
 
-# 🔧 Define model architecture matching training script
+# ✅ Use GPU if available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🖥️ Using device: {device}")
+
 class CandleNet(nn.Module):
     def __init__(self, input_size=8):
         super(CandleNet, self).__init__()
@@ -31,7 +34,6 @@ class CandleNet(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-# 🔍 Predict the next 24 hourly candles
 def predict_24_hourly():
     print("📊 Predicting the next 24 hourly candles...")
     csv_path = "TVexport_with_features.csv"
@@ -40,35 +42,27 @@ def predict_24_hourly():
     df = pd.read_csv(csv_path)
     print(f"🧮 CSV Columns: {list(df.columns)}")
 
-    # Fill missing values
     df = df.ffill().bfill()
-
-    # Use the last 24 rows for prediction
     last_24 = df.iloc[-24:].copy()
 
-    # Only use the features used during training
     features = [
         "candle_body", "candle_range", "upper_wick", "lower_wick",
         "close_to_open_ratio", "high_to_low_ratio", "open", "close"
     ]
     X = last_24[features].values.astype(np.float32)
 
-    # Normalize features
     scaler = MinMaxScaler()
     X_scaled = scaler.fit_transform(X)
-    X_tensor = torch.tensor(X_scaled, dtype=torch.float32)
+    X_tensor = torch.tensor(X_scaled, dtype=torch.float32).to(device)
 
-    # Load model
-    model = CandleNet(input_size=len(features))
-    model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
+    model = CandleNet(input_size=len(features)).to(device)
+    model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
 
-    # Predict with confidence
     with torch.no_grad():
         outputs = model(X_tensor).squeeze()
-        probs = torch.sigmoid(outputs).numpy()
+        probs = torch.sigmoid(outputs).cpu().numpy()
 
-    # Print results
     with open("predictions_hourly.txt", "w") as f:
         for i, p in enumerate(probs, 1):
             label = "Green" if p >= 0.5 else "Red"
