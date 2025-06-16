@@ -29,8 +29,14 @@ class CandleNet(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-def predict_24_hourly():
-    print("📊 Predicting the next 24 hourly candles...")
+def enable_dropout(model):
+    """ Force dropout layers to remain active during prediction """
+    for m in model.modules():
+        if isinstance(m, nn.Dropout):
+            m.train()
+
+def predict_24_hourly(mc_passes=20):
+    print("📊 Predicting the next 24 hourly candles with MC Dropout...")
 
     csv_path = "TVexport_with_features.csv"
     model_path = "model.pth"
@@ -38,10 +44,8 @@ def predict_24_hourly():
     df = pd.read_csv(csv_path)
     print(f"🧮 CSV Columns: {list(df.columns)}")
 
-    # Fill missing values
     df = df.ffill().bfill()
 
-    # Use the last 24 rows for prediction
     last_24 = df.iloc[-24:].copy()
 
     features = [
@@ -50,26 +54,29 @@ def predict_24_hourly():
     ]
     X = last_24[features].values.astype(np.float32)
 
-    # Normalize features
     scaler = MinMaxScaler()
     X_scaled = scaler.fit_transform(X)
     X_tensor = torch.tensor(X_scaled, dtype=torch.float32)
 
-    # Load model
     model = CandleNet(input_size=len(features))
     model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
     model.eval()
+    enable_dropout(model)
 
-    # Predict
-    with torch.no_grad():
-        outputs = model(X_tensor).squeeze()
-        probs = torch.sigmoid(outputs).numpy()
+    predictions = []
+    for _ in range(mc_passes):
+        with torch.no_grad():
+            outputs = model(X_tensor).squeeze()
+            probs = torch.sigmoid(outputs).numpy()
+            predictions.append(probs)
 
-    # Print results
+    predictions = np.array(predictions)
+    mean_probs = predictions.mean(axis=0)
+
     with open("predictions_hourly.txt", "w") as f:
-        for i, p in enumerate(probs, 1):
+        for i, p in enumerate(mean_probs, 1):
             label = "Green" if p >= 0.5 else "Red"
-            confidence = round(p if p >= 0.5 else 1 - p, 2)
+            confidence = round(p, 2)
             print(f"Hour {i}: {label} (Confidence: {confidence:.2f})")
             f.write(f"Hour {i}: {label} (Confidence: {confidence:.2f})\n")
 
