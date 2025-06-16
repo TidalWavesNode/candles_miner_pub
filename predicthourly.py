@@ -4,7 +4,7 @@ import numpy as np
 from torch import nn
 from sklearn.preprocessing import MinMaxScaler
 
-# ✅ Use GPU if available
+# ✅ Use GPU if available otherwise use CPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"🖥️ Using device: {device}")
 
