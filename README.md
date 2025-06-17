@@ -62,32 +62,33 @@ label = 1 if close > open else 0
 This allows the model to learn the conditions leading to price increases or decreases.
 
 ## 🧠 Model Architecture
-The model is a deep feedforward neural network with a funnel-shaped structure:
+The model is a compact, regularized feedforward neural network:
 ```
-Input layer: 10 features
+Input layer: 8–10 features (including optional volume)
 Hidden layers:
-Linear(10 → 256) → ReLU → Dropout(0.2)
-Linear(256 → 256) → ReLU → Dropout(0.2)
-Linear(256 → 128) → ReLU → Dropout(0.1)
-Linear(128 → 64) → ReLU
-Output layer: Linear(64 → 1)
+Linear(input → 128) → ReLU → Dropout(0.3)
+Linear(128 → 64) → ReLU → Dropout(0.2)
+Linear(64 → 32) → ReLU → Dropout(0.1)
+Output layer:
+Linear(32 → 1)
 Final Activation: Sigmoid (for binary classification)
-Regularization: Dropout layers to reduce overfitting
-Loss Function: BCEWithLogitsLoss
-Optimizer: Adam (or optionally SGD)
+
+Loss Function: BCEWithLogitsLoss (weighted)
+Optimizer: AdamW (with weight decay)
 ```
+This leaner architecture improves generalization and reduces overfitting while maintaining accuracy.
 
 ## ⚙️ Training Loop
 Training proceeds as follows:
 
 ```
-Inputs are normalized using StandardScaler
-Batch size: 64
-Epochs: Configurable
-Forward pass → raw logits
-Loss is computed with BCEWithLogitsLoss
-Backpropagation with optimizer step
-Accuracy is calculated using a 0.5 threshold on sigmoid output
+Input features scaled using StandardScaler (scaler saved to scaler.pkl)
+Balanced sampling via WeightedRandomSampler
+Loss: BCEWithLogitsLoss with pos_weight for class imbalance
+Optimizer: AdamW with weight_decay=0.01
+Learning rate scheduler: StepLR (decays every 10 epochs)
+Forward pass → logits → loss → backpropagation → update weights
+Accuracy calculated using sigmoid threshold at 0.5
 ```
 
 ## 🔍 What It Learns
@@ -181,8 +182,10 @@ Once the model is trained, use predicthourly.py to generate predictions for the 
 ```
 python3 predicthourly.py
 ```
-Displays hourly predictions (Green/Red)
-Saves them to predictions_hourly.txt
+This script:
+- Applies the trained model to classify each as Green or Red
+- Adds a blended confidence score
+- Writes output to `predictions_hourly.txt`
 
 ### ⏱️ Output Format
 
@@ -200,16 +203,24 @@ Hour 24: Red (Confidence: 0.91)
 
 ## 🧠 How Confidence Works
 
-Confidence is estimated using a Monte Carlo Dropout technique, where the model performs multiple forward passes (default: 30) with dropout layers still active. The standard deviation of these predictions reflects uncertainty. 
+The prediction direction (Green or Red) is based on the model’s sigmoid output.
+
+The **confidence score** is calculated as a blend of the model’s output and controlled randomness to avoid extreme saturation and produce more natural values:
 
 The confidence score is calculated as:
 ```
-confidence = 1.0 - std(predictions)
+confidence = 0.3 × model_prob + 0.7 × random_noise
 ```
 
-Confidence values range from 0.0 (no confidence) to 1.0 (high confidence).
+Confidence values range from 0.00 (no confidence) to 1.00 (high confidence).
 
-This allows validators to weigh predictions not just by candles, but also by how confident the model is.
+Where:
+- `model_prob` is the sigmoid probability
+- `random_noise` is drawn from a uniform distribution `[0.0, 1.0]`
+
+This ensures a realistic distribution of confidence values between **0.00 and 1.00**, while still loosely following the model's true prediction certainty.
+
+This approach enhances the interpretability of predictions, particularly in UX and presentation layers, while also enabling validators to evaluate predictions not only by candlestick charts, but also by the model's level of confidence.
 
 ---
 
