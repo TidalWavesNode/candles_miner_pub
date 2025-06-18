@@ -1,70 +1,79 @@
 import torch
+import torch.nn as nn
 import pandas as pd
 import numpy as np
-from torch import nn
-import joblib
-import random
+import requests
+import pickle
+from sklearn.preprocessing import StandardScaler
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"🖥️ Using device: {device}")
-
+# 🧠 Model architecture (matches what was used in training)
 class CandleNet(nn.Module):
-    def __init__(self, input_size=8):
+    def __init__(self):
         super(CandleNet, self).__init__()
         self.model = nn.Sequential(
-            nn.Linear(input_size, 128), nn.ReLU(), nn.Dropout(0.3),
-            nn.Linear(128, 64), nn.ReLU(), nn.Dropout(0.2),
-            nn.Linear(64, 32), nn.ReLU(), nn.Dropout(0.1),
-            nn.Linear(32, 1)
+            nn.Linear(10, 256),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(256, 256),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(0.1),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, 1),
+            nn.Sigmoid()
         )
 
     def forward(self, x):
         return self.model(x)
 
-def predict_24_hourly():
-    print("📊 Predicting the next 24 hourly candles...")
-    csv_path = "TVexport_with_features.csv"
-    model_path = "model.pth"
-    scaler_path = "scaler.pkl"
+# 🧮 Load scaler
+with open("scaler.pkl", "rb") as f:
+    scaler = pickle.load(f)
 
-    df = pd.read_csv(csv_path).ffill().bfill()
-    last_24 = df.iloc[-24:].copy()
+# 🧠 Load trained model
+model = CandleNet()
+model.load_state_dict(torch.load("model.pth", map_location=torch.device("cpu")))
+model.eval()
 
-    features = [
-        "candle_body", "candle_range", "upper_wick", "lower_wick",
-        "close_to_open_ratio", "high_to_low_ratio", "open", "close"
-    ]
-    if 'volume' in last_24.columns:
-        features.append("volume")
+# 📈 Load latest 24 candles
+df = pd.read_csv("TVexport_with_features.csv")
+features = [
+    "open", "high", "low", "close", "candle_body", "candle_range",
+    "upper_wick", "lower_wick", "close_to_open_ratio", "high_to_low_ratio"
+]
+latest = df[features].tail(24).values.astype(np.float32)
+X = scaler.transform(latest)
+X_tensor = torch.tensor(X)
 
-    X = last_24[features].values.astype(np.float32)
+# 🌐 Fetch current price from Coindesk API
+try:
+    response = requests.get("https://data-api.coindesk.com//index/cc/v1/latest/tick?market=cadli&instruments=TAO-USDT&apply_mapping=true")
+    response.raise_for_status()
+    current_price = float(response.json()["data"]["TAO-USDT"]["c"])
+except Exception as e:
+    print(f"⚠️ Failed to fetch live price: {e}")
+    current_price = float(df["close"].iloc[-1])  # fallback to last known price
 
-    scaler = joblib.load(scaler_path)
-    X_scaled = scaler.transform(X)
-    X_tensor = torch.tensor(X_scaled, dtype=torch.float32).to(device)
+print(f"📊 Starting TAO Price: ${current_price:.4f}")
+print("🔮 Predicting next 24 candles...\n")
 
-    model = CandleNet(input_size=X.shape[1]).to(device)
-    model.load_state_dict(torch.load(model_path, map_location=device))
-    model.eval()
-
+# 📤 Predict direction and simulate price movements
+price = current_price
+for i, x in enumerate(X_tensor, 1):
     with torch.no_grad():
-        outputs = model(X_tensor).squeeze()
-        probs = torch.sigmoid(outputs).cpu().numpy()
+        pred = model(x.unsqueeze(0)).item()
+    label = "Green" if pred >= 0.5 else "Red"
 
-    with open("predictions_hourly.txt", "w") as f:
-        for i, real_conf in enumerate(probs, 1):
-            label = "Green" if real_conf >= 0.5 else "Red"
-            noise = random.uniform(0.0, 1.0)
-            if label == "Green":
-                blended_conf = 0.3 * real_conf + 0.7 * noise
-            else:
-                blended_conf = 0.3 * (1 - real_conf) + 0.7 * noise
+    # 💥 Simulate confidence with noise
+    noise = np.random.uniform(0, 1)
+    confidence = abs(pred - 0.5) * 2
+    confidence = np.clip((confidence + noise) / 2, 0, 1)
 
-            confidence = round(float(blended_conf), 4)
-            print(f"Hour {i}: {label} (Confidence: {confidence})")
-            f.write(f"Hour {i}: {label} (Confidence: {confidence})\n")
+    # 💹 Simulate price change (± up to 2% movement)
+    pct_change = np.random.uniform(0.001, 0.02) * (1 if label == "Green" else -1)
+    price *= 1 + pct_change
 
-    print("✅ predictions saved to predictions_hourly.txt")
-
-if __name__ == "__main__":
-    predict_24_hourly()
+    print(f"Hour {i}: {label} (Confidence: {confidence:.2f}) → Predicted Price: ${price:.4f}")
