@@ -128,7 +128,7 @@ pip, venv
 git clone https://github.com/TidalWavesNode/candles_miner_pub
 ```
 ```
-cd candles_miner
+cd candles_miner_pub
 ```
 
 ### Create and Activate a Virtual Environment
