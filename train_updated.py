@@ -51,8 +51,10 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
+
+# Save both scaler and feature count
 with open("scaler.pkl", "wb") as f:
-    pickle.dump(scaler, f)
+    pickle.dump({"scaler": scaler, "n_features": X.shape[1]}, f)
 
 # 🔧 Datasets
 train_data = torch.utils.data.TensorDataset(torch.tensor(X_train), torch.tensor(y_train))
