@@ -2,11 +2,11 @@ import torch
 import torch.nn as nn
 import pandas as pd
 import numpy as np
-import requests
 import pickle
-from sklearn.preprocessing import StandardScaler
+import requests
+import random
 
-# 🧠 Model architecture (matches what was used in training)
+# Define the model architecture inline
 class CandleNet(nn.Module):
     def __init__(self):
         super(CandleNet, self).__init__()
@@ -22,58 +22,64 @@ class CandleNet(nn.Module):
             nn.Dropout(0.1),
             nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Linear(64, 1),
-            nn.Sigmoid()
+            nn.Linear(64, 1)
         )
 
     def forward(self, x):
         return self.model(x)
 
-# 🧮 Load scaler
-with open("scaler.pkl", "rb") as f:
-    scaler = pickle.load(f)
-
-# 🧠 Load trained model
+# Load model and scaler
 model = CandleNet()
 model.load_state_dict(torch.load("model.pth", map_location=torch.device("cpu")))
 model.eval()
 
-# 📈 Load latest 24 candles
-df = pd.read_csv("TVexport_with_features.csv")
-features = [
-    "open", "high", "low", "close", "candle_body", "candle_range",
-    "upper_wick", "lower_wick", "close_to_open_ratio", "high_to_low_ratio"
-]
-latest = df[features].tail(24).values.astype(np.float32)
-X = scaler.transform(latest)
-X_tensor = torch.tensor(X)
+with open("scaler.pkl", "rb") as f:
+    scaler = pickle.load(f)
 
-# 🌐 Fetch current price from Coindesk API
+# Load latest data
+df = pd.read_csv("TVexport_with_features.csv")
+features = df.iloc[-1][['open', 'high', 'low', 'close', 'candle_body', 'candle_range',
+                        'upper_wick', 'lower_wick', 'close_to_open_ratio', 'high_to_low_ratio']].values.reshape(1, -1)
+features = scaler.transform(features)
+features_tensor = torch.tensor(features, dtype=torch.float32)
+
+# Predict direction
+with torch.no_grad():
+    logit = model(features_tensor)
+    prob = torch.sigmoid(logit).item()
+
+# Generate randomized confidence score blended with real probability
+noise = random.uniform(0.0, 1.0)
+blended_confidence = (prob + noise) / 2
+
+# Fetch current TAO/USDT price from Coindesk CADLI
 try:
-    response = requests.get("https://data-api.coindesk.com//index/cc/v1/latest/tick?market=cadli&instruments=TAO-USDT&apply_mapping=true")
-    response.raise_for_status()
-    current_price = float(response.json()["data"]["TAO-USDT"]["c"])
+    response = requests.get(
+        'https://data-api.coindesk.com/index/cc/v1/latest/tick',
+        params={"market": "cadli", "instruments": "TAO-USDT", "apply_mapping": "true"},
+        headers={"Content-type": "application/json; charset=UTF-8"}
+    )
+    data = response.json()
+    current_price = data["Data"]["TAO-USDT"]["VALUE"]
+    print(f"📊 Starting TAO Price: ${current_price:.4f}")
 except Exception as e:
     print(f"⚠️ Failed to fetch live price: {e}")
-    current_price = float(df["close"].iloc[-1])  # fallback to last known price
+    current_price = 400.00  # fallback
 
-print(f"📊 Starting TAO Price: ${current_price:.4f}")
 print("🔮 Predicting next 24 candles...\n")
 
-# 📤 Predict direction and simulate price movements
 price = current_price
-for i, x in enumerate(X_tensor, 1):
+for hour in range(1, 25):
     with torch.no_grad():
-        pred = model(x.unsqueeze(0)).item()
-    label = "Green" if pred >= 0.5 else "Red"
+        logit = model(features_tensor)
+        prob = torch.sigmoid(logit).item()
+        noise = random.uniform(0.0, 1.0)
+        confidence = (prob + noise) / 2
 
-    # 💥 Simulate confidence with noise
-    noise = np.random.uniform(0, 1)
-    confidence = abs(pred - 0.5) * 2
-    confidence = np.clip((confidence + noise) / 2, 0, 1)
+    direction = "Green" if prob > 0.5 else "Red"
 
-    # 💹 Simulate price change (± up to 2% movement)
-    pct_change = np.random.uniform(0.001, 0.02) * (1 if label == "Green" else -1)
-    price *= 1 + pct_change
+    # Simple simulated price movement
+    delta = price * (0.005 + random.uniform(0.001, 0.008))  # 0.5% - 1.3%
+    price = price + delta if direction == "Green" else price - delta
 
-    print(f"Hour {i}: {label} (Confidence: {confidence:.2f}) → Predicted Price: ${price:.4f}")
+    print(f"Hour {hour}: {direction} (Confidence: {confidence:.2f}) → Predicted Price: ${price:.4f}")
