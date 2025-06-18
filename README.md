@@ -185,20 +185,24 @@ python3 predicthourly.py
 This script:
 - Applies the trained model to classify each as Green or Red
 - Adds a blended confidence score
+- Price predictions using TAO/USDT data from CADLI
 - Writes output to `predictions_hourly.txt`
 
 ### ⏱️ Output Format
 
-Each prediction indicates whether the model expects the candle to be Green (price increase) or Red (price decrease), along with a confidence level between 0.0 and 1.0:
+Each prediction indicates whether the model expects
+- The candle to be Green (price increase) or Red (price decrease)
+- A confidence level between 0.0 and 1.0 (scored as a percentage)
+- A price prediction based on the CADLI index to get a starting price (Each hour builds off the last (cumulative simulation))
 
 ```
 📤 Predictions:
-Hour 1: Green (Confidence: 0.94)
-Hour 2: Red (Confidence: 0.89)
-Hour 3: Green (Confidence: 0.97)
+Hour 1: Green (Confidence: 0.82) → Predicted Price: $443.6977
+Hour 2: Green (Confidence: 0.65) → Predicted Price: $449.1229
+Hour 3: Green (Confidence: 0.60) → Predicted Price: $452.4958
+Hour 4: Green (Confidence: 0.87) → Predicted Price: $455.0407
 ...
-Hour 24: Red (Confidence: 0.91)
-
+Hour 24: Red (Confidence: 0.68) → Predicted Price: $465.1418
 ```
 
 ## 🧠 How Confidence Works
