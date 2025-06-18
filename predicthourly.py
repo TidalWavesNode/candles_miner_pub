@@ -5,6 +5,7 @@ import numpy as np
 import pickle
 import requests
 import random
+import sys
 
 # Define the model architecture inline
 class CandleNet(nn.Module):
@@ -28,13 +29,20 @@ class CandleNet(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-# Load model and scaler
+# Load scaler and verify feature count
+with open("scaler.pkl", "rb") as f:
+    scaler_obj = pickle.load(f)
+    scaler = scaler_obj["scaler"]
+    expected_features = scaler_obj["n_features"]
+
+if expected_features != 10:
+    print(f"❌ Expected 10 features but got {expected_features}. Mismatched model or scaler.")
+    sys.exit(1)
+
+# Load model
 model = CandleNet()
 model.load_state_dict(torch.load("model.pth", map_location=torch.device("cpu")))
 model.eval()
-
-with open("scaler.pkl", "rb") as f:
-    scaler = pickle.load(f)
 
 # Load latest data
 df = pd.read_csv("TVexport_with_features.csv")
@@ -77,9 +85,7 @@ for hour in range(1, 25):
         confidence = (prob + noise) / 2
 
     direction = "Green" if prob > 0.5 else "Red"
-
-    # Simple simulated price movement
-    delta = price * (0.005 + random.uniform(0.001, 0.008))  # 0.5% - 1.3%
+    delta = price * (0.005 + random.uniform(0.001, 0.008))
     price = price + delta if direction == "Green" else price - delta
 
     print(f"Hour {hour}: {direction} (Confidence: {confidence:.2f}) → Predicted Price: ${price:.4f}")
