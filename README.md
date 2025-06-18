@@ -193,7 +193,7 @@ This script:
 Each prediction indicates whether the model expects
 - The candle to be Green (price increase) or Red (price decrease)
 - A confidence level between 0.0 and 1.0 (scored as a percentage)
-- Price predictions using on the CADLI index to get a starting price (Each hour builds off the last (cumulative simulation))
+- Price predictions using a live starting price pulled from CADLI index (Each hour builds off the last (cumulative simulation))
 
 ```
 📊 Starting TAO Price: $436.7500
