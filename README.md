@@ -143,7 +143,7 @@ source env/bin/activate
 ### Install Dependencies
 
 ```
-pip install pandas torch scikit-learn numpy
+pip install pandas torch scikit-learn numpy requests
 ```
 
 ## 🧹 Prepare Your Dataset
