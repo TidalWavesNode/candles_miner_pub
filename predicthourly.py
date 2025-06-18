@@ -7,7 +7,7 @@ import requests
 import random
 import sys
 
-# Define the model architecture inline
+# Define the model
 class CandleNet(nn.Module):
     def __init__(self):
         super(CandleNet, self).__init__()
@@ -29,38 +29,25 @@ class CandleNet(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-# Load scaler and verify feature count
+# Load scaler and model
 with open("scaler.pkl", "rb") as f:
     scaler_obj = pickle.load(f)
     scaler = scaler_obj["scaler"]
     expected_features = scaler_obj["n_features"]
 
 if expected_features != 10:
-    print(f"❌ Expected 10 features but got {expected_features}. Mismatched model or scaler.")
+    print(f"❌ Expected 10 features but got {expected_features}.")
     sys.exit(1)
 
-# Load model
 model = CandleNet()
-model.load_state_dict(torch.load("model.pth", map_location=torch.device("cpu")))
+model.load_state_dict(torch.load("model.pth", map_location="cpu"))
 model.eval()
 
-# Load latest data
+# Load most recent row
 df = pd.read_csv("TVexport_with_features.csv")
-features = df.iloc[-1][['open', 'high', 'low', 'close', 'candle_body', 'candle_range',
-                        'upper_wick', 'lower_wick', 'close_to_open_ratio', 'high_to_low_ratio']].values.reshape(1, -1)
-features = scaler.transform(features)
-features_tensor = torch.tensor(features, dtype=torch.float32)
+last_row = df.iloc[-1].copy()
 
-# Predict direction
-with torch.no_grad():
-    logit = model(features_tensor)
-    prob = torch.sigmoid(logit).item()
-
-# Generate randomized confidence score blended with real probability
-noise = random.uniform(0.0, 1.0)
-blended_confidence = (prob + noise) / 2
-
-# Fetch current TAO/USDT price from Coindesk CADLI
+# Fetch current price
 try:
     response = requests.get(
         'https://data-api.coindesk.com/index/cc/v1/latest/tick',
@@ -72,12 +59,35 @@ try:
     print(f"📊 Starting TAO Price: ${current_price:.4f}")
 except Exception as e:
     print(f"⚠️ Failed to fetch live price: {e}")
-    current_price = 400.00  # fallback
+    current_price = last_row["close"]
 
 print("🔮 Predicting next 24 candles...\n")
 
 price = current_price
+
 for hour in range(1, 25):
+    # Build feature vector for current hour
+    feature_vector = np.array([
+        price,  # open
+        price * random.uniform(1.001, 1.01),  # high
+        price * random.uniform(0.99, 0.999),  # low
+        price * random.uniform(0.995, 1.005),  # close
+    ])
+    candle_body = abs(feature_vector[3] - feature_vector[0])
+    candle_range = feature_vector[1] - feature_vector[2]
+    upper_wick = feature_vector[1] - max(feature_vector[3], feature_vector[0])
+    lower_wick = min(feature_vector[3], feature_vector[0]) - feature_vector[2]
+    close_to_open = feature_vector[3] / feature_vector[0]
+    high_to_low = feature_vector[1] / feature_vector[2]
+
+    full_vector = np.array([
+        feature_vector[0], feature_vector[1], feature_vector[2], feature_vector[3],
+        candle_body, candle_range, upper_wick, lower_wick, close_to_open, high_to_low
+    ]).reshape(1, -1)
+
+    scaled = scaler.transform(full_vector)
+    features_tensor = torch.tensor(scaled, dtype=torch.float32)
+
     with torch.no_grad():
         logit = model(features_tensor)
         prob = torch.sigmoid(logit).item()
