@@ -1,106 +1,86 @@
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
+import torch.optim as optim
 import pandas as pd
 import numpy as np
-import joblib
-from sklearn.preprocessing import StandardScaler
-from sklearn.utils.class_weight import compute_class_weight
 import argparse
+import pickle
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"🖥️ Using device: {device}")
-
-class CandleDataset(Dataset):
-    def __init__(self, csv_path, scaler_path="scaler.pkl", save_scaler=True):
-        df = pd.read_csv(csv_path).ffill().bfill()
-
-        features = [
-            "candle_body", "candle_range", "upper_wick", "lower_wick",
-            "close_to_open_ratio", "high_to_low_ratio", "open", "close"
-        ]
-        if 'volume' in df.columns:
-            features.append('volume')
-
-        self.y = (df["close"] > df["open"]).astype(int).values.astype(np.float32)
-        print(f"⚖️ Positive class ratio: {np.mean(self.y):.2f}")
-
-        scaler = StandardScaler()
-        self.X = scaler.fit_transform(df[features].values.astype(np.float32))
-
-        if save_scaler:
-            joblib.dump(scaler, scaler_path)
-
-        self.X = self.X.astype(np.float32)
-
-    def __len__(self):
-        return len(self.X)
-
-    def __getitem__(self, idx):
-        return self.X[idx], self.y[idx]
-
+# 🧠 Model definition
 class CandleNet(nn.Module):
-    def __init__(self, input_size):
+    def __init__(self):
         super(CandleNet, self).__init__()
         self.model = nn.Sequential(
-            nn.Linear(input_size, 128), nn.ReLU(), nn.Dropout(0.3),
-            nn.Linear(128, 64), nn.ReLU(), nn.Dropout(0.2),
-            nn.Linear(64, 32), nn.ReLU(), nn.Dropout(0.1),
-            nn.Linear(32, 1)
+            nn.Linear(10, 256),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(256, 256),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(0.1),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, 1),
+            nn.Sigmoid()
         )
 
     def forward(self, x):
         return self.model(x)
 
-def train_model(csv_path, epochs, batch_size, lr):
-    dataset = CandleDataset(csv_path)
-    
-    class_weights = compute_class_weight(
-        class_weight="balanced",
-        classes=np.unique(dataset.y),
-        y=dataset.y.astype(int)
-    )
-    class_weights = torch.tensor(class_weights, dtype=torch.float).to(device)
+parser = argparse.ArgumentParser()
+parser.add_argument("--csv", type=str, required=True)
+parser.add_argument("--epochs", type=int, default=50)
+parser.add_argument("--batch-size", type=int, default=64)
+parser.add_argument("--lr", type=float, default=0.0005)
+args = parser.parse_args()
 
-    criterion = nn.BCEWithLogitsLoss(pos_weight=class_weights[1])
-    sample_weights = np.array([class_weights[int(label)] for label in dataset.y])
-    sampler = WeightedRandomSampler(weights=sample_weights, num_samples=len(sample_weights), replacement=True)
-    dataloader = DataLoader(dataset, batch_size=batch_size, sampler=sampler)
+df = pd.read_csv(args.csv)
+features = [
+    "open", "high", "low", "close", "candle_body", "candle_range",
+    "upper_wick", "lower_wick", "close_to_open_ratio", "high_to_low_ratio"
+]
+X = df[features].values.astype(np.float32)
+y = (df["close"] > df["open"]).astype(int).values.astype(np.float32)
 
-    model = CandleNet(input_size=dataset.X.shape[1]).to(device)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.01)  # ✅ Add weight_decay
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.7)
+# 🧪 Split and scale
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+with open("scaler.pkl", "wb") as f:
+    pickle.dump(scaler, f)
 
-    for epoch in range(1, epochs + 1):
-        model.train()
-        total_loss, correct = 0.0, 0
+# 🔧 Datasets
+train_data = torch.utils.data.TensorDataset(torch.tensor(X_train), torch.tensor(y_train))
+train_loader = torch.utils.data.DataLoader(train_data, batch_size=args.batch_size, shuffle=True)
 
-        for X, y in dataloader:
-            X, y = X.to(device), y.to(device)
-            optimizer.zero_grad()
-            outputs = model(X).squeeze()
-            loss = criterion(outputs, y)
-            loss.backward()
-            optimizer.step()
+model = CandleNet()
+criterion = nn.BCELoss()
+optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
-            total_loss += loss.item() * X.size(0)
-            preds = torch.round(torch.sigmoid(outputs))
-            correct += (preds == y).sum().item()
+# 🏋️ Training
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.to(device)
+for epoch in range(1, args.epochs + 1):
+    model.train()
+    total_loss, correct, total = 0, 0, 0
+    for xb, yb in train_loader:
+        xb, yb = xb.to(device), yb.to(device).unsqueeze(1)
+        pred = model(xb)
+        loss = criterion(pred, yb)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        total_loss += loss.item()
+        correct += ((pred > 0.5) == yb).sum().item()
+        total += yb.size(0)
+    acc = correct / total
+    print(f"📈 Epoch {epoch}/{args.epochs} - Loss: {total_loss:.4f} - Accuracy: {acc:.4f}")
 
-        scheduler.step()
-
-        accuracy = correct / len(dataset)
-        avg_loss = total_loss / len(dataset)
-        print(f"📈 Epoch {epoch}/{epochs} - Loss: {avg_loss:.4f} - Accuracy: {accuracy:.4f}")
-
-    torch.save(model.state_dict(), "model.pth")
-    print("✅ Model saved to model.pth")
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--csv", type=str, default="TVexport_with_features.csv")
-    parser.add_argument("--epochs", type=int, default=50)
-    parser.add_argument("--batch-size", type=int, default=64)
-    parser.add_argument("--lr", type=float, default=0.001)
-    args = parser.parse_args()
-    train_model(args.csv, args.epochs, args.batch_size, args.lr)
+# 💾 Save model
+torch.save(model.state_dict(), "model.pth")
+print("✅ Model saved to model.pth")
