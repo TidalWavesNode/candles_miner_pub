@@ -179,7 +179,7 @@ Once training is complete, the model is saved as model.pth.
 
 ## 🔮 Predicting Candles
 
-Once the model is trained, use predicthourly.py, predictdaily.py, or predictall.py to generate predictions for the associated timeframes based on the most recent data.
+Once the model is trained, run predicthourly.py, predictdaily.py, or predictall.py to generate predictions for the associated timeframes based on the most recent data.
 
 predicthourly.py will output 24 hourly predictions.
 
@@ -191,9 +191,12 @@ predictall.py will output 24 hourly, 7 daily, and 4 weekly predictions.
 
 ```
 python3 predicthourly.py
+python3 predictdaily.py
+python3 predictweekly.py
+python3 predictall.py
 ```
 This script:
-- Applies the trained model to classify each as Green or Red
+- Applies the trained model to classify each prediction as Green or Red
 - Adds a blended confidence score
 - Price predictions using TAO/USDT data from CADLI
 - Writes output to `predictions_hourly.txt`
@@ -203,7 +206,7 @@ This script:
 Each prediction indicates whether the model expects
 - The candle to be Green (price increase) or Red (price decrease)
 - A confidence level between 0.0 and 1.0 (scored as a percentage)
-- Price predictions using a live starting price pulled from CADLI index (Each hour builds off the last (cumulative simulation))
+- Price predictions using a live starting price pulled from CADLI index (Each prediction builds off the last (cumulative simulation))
 
 ```
 📊 Starting TAO Price: $436.7500
