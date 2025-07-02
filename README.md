@@ -32,7 +32,7 @@ We view this as a binary classification task:
 The model learns from user-provided historical hourly candles and aims to identify patterns that indicate bullish or bearish movement in the future.
 
 ## 📊 Dataset
-**File**: `TVexport.csv`  
+**Example File**: `TVexport.csv`  
 
 **Samples**: 20,424 hourly candles from various exchanges.
 
@@ -152,7 +152,7 @@ Create a CSV file dataset named TVexport.csv with hourly OHLC data. Example form
 
 time,open,high,low,close
 
-A TVexport.csv example has been provided, containing 9,257 samples of hourly candles. You can also export this from TradingView or any exchange’s API (e.g., Kraken, Coinbase, Binance, MEXC).
+A TVexport.csv example has been provided, containing 20,424 samples of hourly candles from various exchanges. You can also export this data from TradingView or any exchange’s API (e.g., Kraken, Coinbase, Binance, MEXC).
 
 ## 🛠️ Feature Engineering
 Run the feature generator to add technical features:
