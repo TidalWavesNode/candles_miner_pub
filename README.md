@@ -178,7 +178,13 @@ Once training is complete, the model is saved as model.pth.
 
 ## 🔮 Predict the Next 24-Hourly Candles
 
-Once the model is trained, use predicthourly.py to generate predictions for the next 24 hourly candles based on the most recent data.
+Once the model is trained, use predicthourly.py, predictdaily.py, and predictall.py to generate predictions for the associated timeframes based on the most recent data.
+
+predicthourly.py will provide 24 hourly predictions.
+predictdaily.py will provide 7 daily predictions.
+predictweekly.py will provide 4 weekly predictions.
+predictall.py will provide 24 hourly, 7 daily, and 4 weekly predictions.
+
 ```
 python3 predicthourly.py
 ```
