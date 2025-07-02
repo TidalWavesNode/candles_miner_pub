@@ -18,7 +18,7 @@ This model leverages engineered features from historical price action to anticip
   - [🧹 Prepare Your Dataset](#-prepare-your-dataset)
   - [🛠️ Feature Engineering](#%EF%B8%8F-feature-engineering)
   - [🏋️‍♂️ Train the Model](#-train-the-model)
-  - [🔮 Predicting Candles](#-predict-candles)
+  - [🔮 Predicting Candles](#-predicting-candles)
   - [🧠 How Confidence Works](#-how-confidence-works)
 - [⚠️ Disclaimer](#-disclaimer)
 
