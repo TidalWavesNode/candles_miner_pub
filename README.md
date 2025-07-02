@@ -33,7 +33,8 @@ The model learns from user-provided historical hourly candles and aims to identi
 
 ## 📊 Dataset
 **File**: `TVexport.csv`  
-**Samples**: 9,257 hourly candles
+
+**Samples**: 20,424 hourly candles from various exchanges.
 
 Each row represents one hourly candle and includes both raw price data and derived features.
 
