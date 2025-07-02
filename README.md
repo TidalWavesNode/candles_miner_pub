@@ -18,7 +18,7 @@ This model leverages engineered features from historical price action to anticip
   - [🧹 Prepare Your Dataset](#-prepare-your-dataset)
   - [🛠️ Feature Engineering](#%EF%B8%8F-feature-engineering)
   - [🏋️‍♂️ Train the Model](#-train-the-model)
-  - [🔮 Predict the Next 24-Hourly Candles](#-predict-the-next-24-hourly-candles)
+  - [🔮 Predicting Candles](#-predict-candles)
   - [🧠 How Confidence Works](#-how-confidence-works)
 - [⚠️ Disclaimer](#-disclaimer)
 
@@ -176,13 +176,16 @@ Adjust training parameters as needed to achieve desired results.
 
 Once training is complete, the model is saved as model.pth.
 
-## 🔮 Predict the Next 24-Hourly Candles
+## 🔮 Predicting Candles
 
 Once the model is trained, use predicthourly.py, predictdaily.py, and predictall.py to generate predictions for the associated timeframes based on the most recent data.
 
 predicthourly.py will provide 24 hourly predictions.
+
 predictdaily.py will provide 7 daily predictions.
+
 predictweekly.py will provide 4 weekly predictions.
+
 predictall.py will provide 24 hourly, 7 daily, and 4 weekly predictions.
 
 ```
