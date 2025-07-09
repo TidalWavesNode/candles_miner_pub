@@ -167,7 +167,7 @@ Wick lengths
 Ratio metrics (close/open, high/low)
 
 ## 🏋️‍♂️ Train the Model
-Train the model using engineered data:
+Train the model using engineered data: (training will utilize a GPU if one is present, if no GPU training will default to CPU)
 
 ```
 python3 train_updated.py --csv TVexport_with_features.csv --epochs 150 --batch-size 64 --lr 0.0005
