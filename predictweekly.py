@@ -6,7 +6,9 @@ import pickle
 import requests
 import random
 import sys
+from datetime import datetime, timedelta
 
+# 🧠 Model definition
 class CandleNet(nn.Module):
     def __init__(self):
         super(CandleNet, self).__init__()
@@ -28,6 +30,7 @@ class CandleNet(nn.Module):
     def forward(self, x):
         return self.model(x)
 
+# 🔧 Load scaler and validate
 with open("scaler.pkl", "rb") as f:
     scaler_obj = pickle.load(f)
     scaler = scaler_obj["scaler"]
@@ -37,10 +40,12 @@ if expected_features != 10:
     print(f"❌ Expected 10 features but got {expected_features}.")
     sys.exit(1)
 
+# 🎯 Load trained model
 model = CandleNet()
 model.load_state_dict(torch.load("model.pth", map_location="cpu"))
 model.eval()
 
+# 💰 Fetch live TAO price
 try:
     response = requests.get(
         'https://data-api.coindesk.com/index/cc/v1/latest/tick',
@@ -49,14 +54,21 @@ try:
     )
     data = response.json()
     current_price = data["Data"]["TAO-USDT"]["VALUE"]
+    print(f"📊 Starting TAO Price: ${current_price:.4f}")
 except Exception as e:
     print(f"⚠️ Failed to fetch live price: {e}")
     current_price = 100.0
 
+# 🔮 Begin prediction loop
 price = current_price
-output = [f"📊 Starting TAO Price: ${price:.4f}\n", "🔮 Predicting next 4 weekly candles...\n"]
+csv_rows = [("timestamp", "color", "confidence", "price")]
+base_time = datetime.utcnow()
 
-for week in range(1, 5):
+print("🔮 Predicting next 4 weekly candles...\n")
+
+for week in range(4):
+    timestamp = int((base_time + timedelta(weeks=week)).timestamp())
+
     open_p = price
     high = open_p * random.uniform(1.05, 1.12)
     low = open_p * random.uniform(0.90, 0.97)
@@ -87,10 +99,9 @@ for week in range(1, 5):
     delta = open_p * (0.015 + random.uniform(0.01, 0.02))
     price = price + delta if direction == "Green" else price - delta
 
-    line = f"Week {week}: {direction} (Confidence: {confidence:.2f}) → Predicted Price: ${price:.4f}\n"
-    print(line, end="")
-    output.append(line)
+    print(f"Week {week + 1}: {direction} (Confidence: {confidence:.2f}) → Predicted Price: ${price:.4f}")
+    csv_rows.append((timestamp, direction, round(confidence, 2), round(price, 4)))
 
-with open("predictions_weekly.txt", "w") as f:
-    f.writelines(output)
-print("✅ Weekly predictions saved to predictions_weekly.txt")
+# 💾 Save results
+pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv("weekly_predictions.csv", index=False)
+print("✅ Weekly predictions saved to weekly_predictions.csv")
