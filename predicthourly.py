@@ -6,6 +6,7 @@ import pickle
 import requests
 import random
 import sys
+from datetime import datetime, timedelta
 
 # Define the model
 class CandleNet(nn.Module):
@@ -61,27 +62,28 @@ except Exception as e:
     print(f"⚠️ Failed to fetch live price: {e}")
     current_price = last_row["close"]
 
-print("🔮 Predicting next 24 candles...\n")
+print("🔮 Predicting next 24 hourly candles...\n")
 
 price = current_price
+csv_rows = [("timestamp", "color", "confidence", "price")]
+base_time = datetime.utcnow()
 
-for hour in range(1, 25):
-    # Build feature vector for current hour
-    feature_vector = np.array([
-        price,  # open
-        price * random.uniform(1.001, 1.01),  # high
-        price * random.uniform(0.99, 0.999),  # low
-        price * random.uniform(0.995, 1.005),  # close
-    ])
-    candle_body = abs(feature_vector[3] - feature_vector[0])
-    candle_range = feature_vector[1] - feature_vector[2]
-    upper_wick = feature_vector[1] - max(feature_vector[3], feature_vector[0])
-    lower_wick = min(feature_vector[3], feature_vector[0]) - feature_vector[2]
-    close_to_open = feature_vector[3] / feature_vector[0]
-    high_to_low = feature_vector[1] / feature_vector[2]
+for hour in range(24):
+    timestamp = int((base_time + timedelta(hours=hour)).timestamp())
+
+    high = price * random.uniform(1.001, 1.01)
+    low = price * random.uniform(0.99, 0.999)
+    close = price * random.uniform(0.995, 1.005)
+
+    candle_body = abs(close - price)
+    candle_range = high - low
+    upper_wick = high - max(close, price)
+    lower_wick = min(close, price) - low
+    close_to_open = close / price
+    high_to_low = high / low
 
     full_vector = np.array([
-        feature_vector[0], feature_vector[1], feature_vector[2], feature_vector[3],
+        price, high, low, close,
         candle_body, candle_range, upper_wick, lower_wick, close_to_open, high_to_low
     ]).reshape(1, -1)
 
@@ -98,4 +100,9 @@ for hour in range(1, 25):
     delta = price * (0.005 + random.uniform(0.001, 0.008))
     price = price + delta if direction == "Green" else price - delta
 
-    print(f"Hour {hour}: {direction} (Confidence: {confidence:.2f}) → Predicted Price: ${price:.4f}")
+    print(f"Hour {hour + 1}: {direction} (Confidence: {confidence:.2f}) → Predicted Price: ${price:.4f}")
+    csv_rows.append((timestamp, direction, round(confidence, 2), round(price, 4)))
+
+# Save to CSV
+pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv("hourly_predictions.csv", index=False)
+print("✅ Hourly predictions saved to hourly_predictions.csv")
