@@ -24,8 +24,7 @@ class CandleNet(nn.Module):
             nn.Dropout(0.1),
             nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Linear(64, 1),
-            nn.Sigmoid()
+            nn.Linear(64, 1)  # No sigmoid here!
         )
 
     def forward(self, x):
@@ -46,6 +45,9 @@ features = [
 X = df[features].values.astype(np.float32)
 y = (df["close"] > df["open"]).astype(int).values.astype(np.float32)
 
+# 🔍 Label distribution check
+print(f"🔍 Label balance: {np.mean(y):.4f} = % Green")
+
 # 🧪 Split and scale
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 scaler = StandardScaler()
@@ -61,7 +63,7 @@ train_data = torch.utils.data.TensorDataset(torch.tensor(X_train), torch.tensor(
 train_loader = torch.utils.data.DataLoader(train_data, batch_size=args.batch_size, shuffle=True)
 
 model = CandleNet()
-criterion = nn.BCELoss()
+criterion = nn.BCEWithLogitsLoss()  # ✅ Stable + recommended
 optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
 # 🏋️ Training
@@ -72,13 +74,14 @@ for epoch in range(1, args.epochs + 1):
     total_loss, correct, total = 0, 0, 0
     for xb, yb in train_loader:
         xb, yb = xb.to(device), yb.to(device).unsqueeze(1)
-        pred = model(xb)
-        loss = criterion(pred, yb)
+        logit = model(xb)
+        loss = criterion(logit, yb)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         total_loss += loss.item()
-        correct += ((pred > 0.5) == yb).sum().item()
+        prob = torch.sigmoid(logit)
+        correct += ((prob > 0.5) == yb).sum().item()
         total += yb.size(0)
     acc = correct / total
     print(f"📈 Epoch {epoch}/{args.epochs} - Loss: {total_loss:.4f} - Accuracy: {acc:.4f}")
