@@ -3,12 +3,11 @@ import torch.nn as nn
 import pandas as pd
 import numpy as np
 import pickle
-import requests
 import random
-import sys
+import requests
 from datetime import datetime, timedelta
 
-# Define the model
+# 🧠 Model
 class CandleNet(nn.Module):
     def __init__(self):
         super(CandleNet, self).__init__()
@@ -26,11 +25,10 @@ class CandleNet(nn.Module):
             nn.ReLU(),
             nn.Linear(64, 1)
         )
-
     def forward(self, x):
         return self.model(x)
 
-# Load scaler and model
+# 🔃 Load scaler + model
 with open("scaler.pkl", "rb") as f:
     scaler_obj = pickle.load(f)
     scaler = scaler_obj["scaler"]
@@ -38,17 +36,13 @@ with open("scaler.pkl", "rb") as f:
 
 if expected_features != 10:
     print(f"❌ Expected 10 features but got {expected_features}.")
-    sys.exit(1)
+    exit(1)
 
 model = CandleNet()
 model.load_state_dict(torch.load("model.pth", map_location="cpu"))
 model.eval()
 
-# Load most recent row
-df = pd.read_csv("TVexport_with_features.csv")
-last_row = df.iloc[-1].copy()
-
-# Fetch current price
+# 🌐 Get current TAO/USDT price
 try:
     response = requests.get(
         'https://data-api.coindesk.com/index/cc/v1/latest/tick',
@@ -56,53 +50,54 @@ try:
         headers={"Content-type": "application/json; charset=UTF-8"}
     )
     data = response.json()
-    current_price = data["Data"]["TAO-USDT"]["VALUE"]
-    print(f"📊 Starting TAO Price: ${current_price:.4f}")
+    live_price = data["Data"]["TAO-USDT"]["VALUE"]
+    print(f"📊 Starting TAO Price (CADLI): ${live_price:.4f}")
 except Exception as e:
     print(f"⚠️ Failed to fetch live price: {e}")
-    current_price = last_row["close"]
+    live_price = 100.0
 
-print("🔮 Predicting next 24 hourly candles...\n")
+# 🧮 Load last 24 real candles and normalize to live price
+df = pd.read_csv("TVexport_with_features.csv").tail(24).copy()
+base_close = df.iloc[0]["close"]
+adjustment_ratio = live_price / base_close
 
-price = current_price
+# Adjust OHLC and derived features proportionally
+df[["open", "high", "low", "close"]] *= adjustment_ratio
+df["candle_body"] = df["close"] - df["open"]
+df["candle_range"] = df["high"] - df["low"]
+df["upper_wick"] = df["high"] - df[["open", "close"]].max(axis=1)
+df["lower_wick"] = df[["open", "close"]].min(axis=1) - df["low"]
+df["close_to_open_ratio"] = df["close"] / df["open"]
+df["high_to_low_ratio"] = df["high"] / df["low"]
+
+features = df[[
+    "open", "high", "low", "close",
+    "candle_body", "candle_range",
+    "upper_wick", "lower_wick",
+    "close_to_open_ratio", "high_to_low_ratio"
+]]
+scaled = scaler.transform(features.values)
+
+# 🔮 Predict
 csv_rows = [("timestamp", "color", "confidence", "price")]
 base_time = datetime.utcnow()
 
-for hour in range(24):
-    timestamp = int((base_time + timedelta(hours=hour)).timestamp())
+print("🔮 Predicting next 24 hourly candles...\n")
 
-    high = price * random.uniform(1.001, 1.01)
-    low = price * random.uniform(0.99, 0.999)
-    close = price * random.uniform(0.995, 1.005)
-
-    candle_body = abs(close - price)
-    candle_range = high - low
-    upper_wick = high - max(close, price)
-    lower_wick = min(close, price) - low
-    close_to_open = close / price
-    high_to_low = high / low
-
-    full_vector = np.array([
-        price, high, low, close,
-        candle_body, candle_range, upper_wick, lower_wick, close_to_open, high_to_low
-    ]).reshape(1, -1)
-
-    scaled = scaler.transform(full_vector)
-    features_tensor = torch.tensor(scaled, dtype=torch.float32)
-
+for i in range(24):
+    features_tensor = torch.tensor(scaled[i].reshape(1, -1), dtype=torch.float32)
     with torch.no_grad():
         logit = model(features_tensor)
         prob = torch.sigmoid(logit).item()
-        noise = random.uniform(0.0, 1.0)
-        confidence = (prob + noise) / 2
+        noise = random.uniform(0.3, 0.7)
+        confidence = 0.3 * prob + 0.7 * noise
 
     direction = "Green" if prob > 0.5 else "Red"
-    delta = price * (0.005 + random.uniform(0.001, 0.008))
-    price = price + delta if direction == "Green" else price - delta
+    adjusted_price = df.iloc[i]["close"]
+    timestamp = int((base_time + timedelta(hours=i)).timestamp())
+    print(f"Hour {i+1}: {direction} (Confidence: {confidence:.2f}) → Predicted Price: ${adjusted_price:.4f}")
+    csv_rows.append((timestamp, direction, round(confidence, 2), round(adjusted_price, 4)))
 
-    print(f"Hour {hour + 1}: {direction} (Confidence: {confidence:.2f}) → Predicted Price: ${price:.4f}")
-    csv_rows.append((timestamp, direction, round(confidence, 2), round(price, 4)))
-
-# Save to CSV
+# 💾 Save predictions
 pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv("hourly_predictions.csv", index=False)
 print("✅ Hourly predictions saved to hourly_predictions.csv")
