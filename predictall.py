@@ -123,8 +123,8 @@ predict_block("Day", 7, timedelta(days=1), {
 })
 
 # 🔮 Predict weekly
-print("🔮 Predicting next 7 weekly candles...\n")
-predict_block("Week", 7, timedelta(weeks=1), {
+print("🔮 Predicting next 4 weekly candles...\n")
+predict_block("Week", 4, timedelta(weeks=1), {
     "open": (0.93, 1.07),
     "high": (1.03, 1.10),
     "low": (0.88, 0.97),
