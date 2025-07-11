@@ -26,11 +26,10 @@ class CandleNet(nn.Module):
             nn.ReLU(),
             nn.Linear(64, 1)
         )
-
     def forward(self, x):
         return self.model(x)
 
-# 🔧 Load scaler and check features
+# 🔧 Load scaler
 with open("scaler.pkl", "rb") as f:
     scaler_obj = pickle.load(f)
     scaler = scaler_obj["scaler"]
@@ -54,54 +53,57 @@ try:
     )
     data = response.json()
     current_price = data["Data"]["TAO-USDT"]["VALUE"]
-    print(f"📊 Starting TAO Price: ${current_price:.4f}")
+    print(f"📊 Starting TAO Price (CADLI): ${current_price:.4f}")
 except Exception as e:
     print(f"⚠️ Failed to fetch live price: {e}")
     current_price = 100.0
 
-# 🔮 Make predictions
-price = current_price
+# 🔮 Predict next 7 daily candles
+print("🔮 Predicting next 7 daily candles...\n")
 csv_rows = [("timestamp", "color", "confidence", "price")]
 base_time = datetime.utcnow()
-
-print("🔮 Predicting next 7 daily candles...\n")
 
 for day in range(7):
     timestamp = int((base_time + timedelta(days=day)).timestamp())
 
-    open_p = price
-    high = open_p * random.uniform(1.01, 1.05)
-    low = open_p * random.uniform(0.95, 0.99)
-    close = open_p * random.uniform(0.97, 1.03)
+    # 🎲 Use starting price with daily volatility
+    open_p = current_price * random.uniform(0.95, 1.05)
+    high = open_p * random.uniform(1.01, 1.07)
+    low = open_p * random.uniform(0.93, 0.99)
+    close = random.choice([
+        open_p * random.uniform(0.97, 0.99),  # likely red
+        open_p * random.uniform(1.01, 1.03),  # likely green
+        open_p * random.uniform(0.94, 1.06),  # neutral
+    ])
 
-    candle_body = abs(close - open_p)
+    candle_body = close - open_p
     candle_range = high - low
     upper_wick = high - max(close, open_p)
     lower_wick = min(close, open_p) - low
     close_to_open = close / open_p
     high_to_low = high / low
 
-    full_vector = np.array([
+    features = np.array([
         open_p, high, low, close,
-        candle_body, candle_range, upper_wick, lower_wick, close_to_open, high_to_low
+        candle_body, candle_range, upper_wick, lower_wick,
+        close_to_open, high_to_low
     ]).reshape(1, -1)
 
-    scaled = scaler.transform(full_vector)
+    scaled = scaler.transform(features)
     features_tensor = torch.tensor(scaled, dtype=torch.float32)
 
     with torch.no_grad():
         logit = model(features_tensor)
         prob = torch.sigmoid(logit).item()
         noise = random.uniform(0.0, 1.0)
-        confidence = (prob + noise) / 2
+        confidence = round((0.3 * prob + 0.7 * noise), 2)
 
     direction = "Green" if prob > 0.5 else "Red"
-    delta = open_p * (0.01 + random.uniform(0.005, 0.015))
-    price = price + delta if direction == "Green" else price - delta
+    price = close  # <- NOT compounding, this is the prediction base
 
     print(f"Day {day + 1}: {direction} (Confidence: {confidence:.2f}) → Predicted Price: ${price:.4f}")
-    csv_rows.append((timestamp, direction, round(confidence, 2), round(price, 4)))
+    csv_rows.append((timestamp, direction, confidence, round(price, 4)))
 
-# 💾 Save to CSV
+# 💾 Save output
 pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv("daily_predictions.csv", index=False)
 print("✅ Daily predictions saved to daily_predictions.csv")
