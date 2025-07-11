@@ -58,12 +58,12 @@ except Exception as e:
     print(f"⚠️ Failed to fetch live price: {e}")
     current_price = 100.0
 
-# 🔮 Predict next 7 weekly candles
-print("🔮 Predicting next 7 weekly candles...\n")
+# 🔮 Predict next 4 weekly candles
+print("🔮 Predicting next 4 weekly candles...\n")
 csv_rows = [("timestamp", "color", "confidence", "price")]
 base_time = datetime.utcnow()
 
-for week in range(7):
+for week in range(4):
     timestamp = int((base_time + timedelta(weeks=week)).timestamp())
 
     open_p = current_price * random.uniform(0.93, 1.07)
