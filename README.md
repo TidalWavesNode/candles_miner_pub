@@ -199,7 +199,10 @@ This script:
 - Applies the trained model to classify each prediction as Green or Red
 - Adds a blended confidence score
 - Price predictions using TAO/USDT data from CADLI
-- Writes output to `predictions_hourly.txt`
+- Writes output to a .csv file in the following directory in the correct format as required to be used by a Candles miner
+~/.candles/data/hourly_predictions.csv   # For hourly predictions
+~/.candles/data/daily_predictions.csv    # For daily predictions
+~/.candles/data/weekly_predictions.csv   # For weekly predictions
 
 ### ⏱️ Output Format
 
