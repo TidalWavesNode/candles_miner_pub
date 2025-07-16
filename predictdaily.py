@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn as nn
 import pandas as pd
@@ -105,5 +106,7 @@ for day in range(7):
     csv_rows.append((timestamp, direction, confidence, round(price, 4)))
 
 # 💾 Save output
-pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv("daily_predictions.csv", index=False)
+#pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv("daily_predictions.csv", index=False)
+pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv(
+    os.path.expanduser("~/.candles/data/daily_predictions.csv"), index=False)
 print("✅ Daily predictions saved to daily_predictions.csv")
