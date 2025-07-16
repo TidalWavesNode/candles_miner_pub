@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn as nn
 import pandas as pd
@@ -99,5 +100,7 @@ for i in range(24):
     csv_rows.append((timestamp, direction, round(confidence, 2), round(adjusted_price, 4)))
 
 # 💾 Save predictions
-pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv("hourly_predictions.csv", index=False)
+#pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv("hourly_predictions.csv", index=False)
+pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv(
+    os.path.expanduser("~/.candles/data/hourly_predictions.csv"), index=False)
 print("✅ Hourly predictions saved to hourly_predictions.csv")
