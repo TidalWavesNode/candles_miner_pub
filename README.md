@@ -1,4 +1,4 @@
-# Candles Base Miner
+<img width="489" height="583" alt="image" src="https://github.com/user-attachments/assets/367a3213-c237-4cbf-98fd-e9d73a2bb839" /># Candles Base Miner
 
 A **binary classification neural network** designed to predict whether the **next hourly trading candle** will be **green** (price goes up) or **red** (price goes down), using the structure and behavior of past candles.  
 
@@ -222,7 +222,13 @@ Hour 4: Green (Confidence: 0.87) → Predicted Price: $455.0407
 ...
 Hour 24: Red (Confidence: 0.68) → Predicted Price: $465.1418
 ```
-
+The created CSV files are in the following format to be used by a Candles miner
+```
+timestamp,color,confidence,price
+1704067200,red,0.85,45.50
+1704070800,green,0.92,46.20
+1704074400,red,0.78,44.90```
+```
 ## 🧠 How Confidence Works
 
 The prediction direction (Green or Red) is based on the model’s sigmoid output.
