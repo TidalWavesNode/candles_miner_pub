@@ -112,4 +112,4 @@ for day in range(7):
 os.makedirs(os.path.expanduser("~/.candles/data/"), exist_ok=True)
 pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv(
     os.path.expanduser("~/.candles/data/daily_predictions.csv"), index=False)
-print("✅ Daily predictions saved to daily_predictions.csv")
+print("✅ Daily predictions saved to ~/.candles/data/daily_predictions.csv")
