@@ -1,12 +1,12 @@
 import os
 import torch
 import torch.nn as nn
-import pandas as pd
 import numpy as np
 import pickle
 import random
 import requests
 from datetime import datetime, timedelta
+import pandas as pd
 
 # 🧠 Model
 class CandleNet(nn.Module):
@@ -57,27 +57,31 @@ except Exception as e:
     print(f"⚠️ Failed to fetch live price: {e}")
     live_price = 100.0
 
-# 🧮 Load last 24 real candles and normalize to live price
-df = pd.read_csv("TVexport_with_features.csv").tail(24).copy()
-base_close = df.iloc[0]["close"]
-adjustment_ratio = live_price / base_close
+# 🧮 Simulate 24 candle feature rows
+features_list = []
+base_price = live_price
 
-# Adjust OHLC and derived features proportionally
-df[["open", "high", "low", "close"]] *= adjustment_ratio
-df["candle_body"] = df["close"] - df["open"]
-df["candle_range"] = df["high"] - df["low"]
-df["upper_wick"] = df["high"] - df[["open", "close"]].max(axis=1)
-df["lower_wick"] = df[["open", "close"]].min(axis=1) - df["low"]
-df["close_to_open_ratio"] = df["close"] / df["open"]
-df["high_to_low_ratio"] = df["high"] / df["low"]
+for _ in range(24):
+    open_price = base_price + random.uniform(-5, 5)
+    close_price = open_price + random.uniform(-3, 3)
+    high_price = max(open_price, close_price) + random.uniform(0, 2)
+    low_price = min(open_price, close_price) - random.uniform(0, 2)
+    candle_body = close_price - open_price
+    candle_range = high_price - low_price
+    upper_wick = high_price - max(open_price, close_price)
+    lower_wick = min(open_price, close_price) - low_price
+    close_to_open = close_price / open_price if open_price != 0 else 1
+    high_to_low = high_price / low_price if low_price != 0 else 1
 
-features = df[[
-    "open", "high", "low", "close",
-    "candle_body", "candle_range",
-    "upper_wick", "lower_wick",
-    "close_to_open_ratio", "high_to_low_ratio"
-]]
-scaled = scaler.transform(features.values)
+    features_list.append([
+        open_price, high_price, low_price, close_price,
+        candle_body, candle_range,
+        upper_wick, lower_wick,
+        close_to_open, high_to_low
+    ])
+
+features_array = np.array(features_list)
+scaled = scaler.transform(features_array)
 
 # 🔮 Predict
 csv_rows = [("timestamp", "color", "confidence", "price")]
@@ -94,16 +98,14 @@ for i in range(24):
         confidence = 0.3 * prob + 0.7 * noise
 
     direction = "Green" if prob > 0.5 else "Red"
-    adjusted_price = df.iloc[i]["close"]
+    predicted_price = features_list[i][3]  # close price
     timestamp = int((base_time + timedelta(hours=i)).timestamp())
-    print(f"Hour {i+1}: {direction} (Confidence: {confidence:.2f}) → Predicted Price: ${adjusted_price:.4f}")
-    csv_rows.append((timestamp, direction, round(confidence, 2), round(adjusted_price, 4)))
+    print(f"Hour {i+1}: {direction} (Confidence: {confidence:.2f}) → Predicted Price: ${predicted_price:.4f}")
+    csv_rows.append((timestamp, direction, round(confidence, 2), round(predicted_price, 4)))
 
 # 💾 Save predictions
-#pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv("hourly_predictions.csv", index=False)
-#pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv(
-#    os.path.expanduser("~/.candles/data/hourly_predictions.csv"), index=False)
 os.makedirs(os.path.expanduser("~/.candles/data/"), exist_ok=True)
 pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv(
-    os.path.expanduser("~/.candles/data/daily_predictions.csv"), index=False)
+    os.path.expanduser("~/.candles/data/hourly_predictions.csv"), index=False
+)
 print("✅ Hourly predictions saved to ~/.candles/data/hourly_predictions.csv")
