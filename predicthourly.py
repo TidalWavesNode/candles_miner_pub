@@ -106,4 +106,4 @@ for i in range(24):
 os.makedirs(os.path.expanduser("~/.candles/data/"), exist_ok=True)
 pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv(
     os.path.expanduser("~/.candles/data/daily_predictions.csv"), index=False)
-print("✅ Hourly predictions saved to hourly_predictions.csv")
+print("✅ Hourly predictions saved to ~/.candles/data/hourly_predictions.csv")
