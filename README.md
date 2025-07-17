@@ -1,4 +1,4 @@
-<img width="489" height="583" alt="image" src="https://github.com/user-attachments/assets/367a3213-c237-4cbf-98fd-e9d73a2bb839" /># Candles Base Miner
+# Candles Base Miner
 
 A **binary classification neural network** designed to predict whether the **next hourly trading candle** will be **green** (price goes up) or **red** (price goes down), using the structure and behavior of past candles.  
 
