@@ -106,6 +106,11 @@ for week in range(4):
 
 # 💾 Save output
 #pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv("weekly_predictions.csv", index=False)
+#pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv(
+#    os.path.expanduser("~/.candles/data/weekly_predictions.csv"), index=False)
+# 💾 Save output to ~/.candles/data/weekly_predictions.csv
+import os
+os.makedirs(os.path.expanduser("~/.candles/data/"), exist_ok=True)
 pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv(
     os.path.expanduser("~/.candles/data/weekly_predictions.csv"), index=False)
-print("✅ Weekly predictions saved to weekly_predictions.csv")
+print("✅ Weekly predictions saved to ~/.candles/data/weekly_predictions.csv")
