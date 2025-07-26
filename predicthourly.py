@@ -5,7 +5,7 @@ import numpy as np
 import pickle
 import random
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import pandas as pd
 
 # 🧠 Model
@@ -85,7 +85,7 @@ scaled = scaler.transform(features_array)
 
 # 🔮 Predict
 csv_rows = [("timestamp", "color", "confidence", "price")]
-base_time = datetime.utcnow()
+base_time = datetime.now(timezone.utc)
 
 print("🔮 Predicting next 24 hourly candles...\n")
 
