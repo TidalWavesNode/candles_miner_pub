@@ -7,7 +7,7 @@ import pickle
 import requests
 import random
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # 🧠 Model definition
 class CandleNet(nn.Module):
@@ -62,7 +62,7 @@ except Exception as e:
 # 🔮 Predict next 7 daily candles
 print("🔮 Predicting next 7 daily candles...\n")
 csv_rows = [("timestamp", "color", "confidence", "price")]
-base_time = datetime.utcnow()
+base_time = datetime.now(timezone.utc)
 
 for day in range(7):
     timestamp = int((base_time + timedelta(days=day)).timestamp())
