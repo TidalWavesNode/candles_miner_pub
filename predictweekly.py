@@ -9,6 +9,23 @@ import random
 import sys
 from datetime import datetime, timedelta, timezone
 
+# 🕒 Timestamp alignment function
+def get_next_timestamp_by_interval(interval: str):
+    now = datetime.now(timezone.utc)
+
+    match interval:
+        case "hourly":
+            return int((now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)).timestamp())
+        case "daily":
+            return int((now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)).timestamp())
+        case "weekly":
+            days_until_monday = (7 - now.weekday()) % 7
+            if days_until_monday == 0:
+                days_until_monday = 7
+            return int((now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=days_until_monday)).timestamp())
+        case _:
+            raise ValueError(f"Invalid interval: {interval}")
+
 # 🧠 Model definition
 class CandleNet(nn.Module):
     def __init__(self):
@@ -62,7 +79,7 @@ except Exception as e:
 # 🔮 Predict next 4 weekly candles
 print("🔮 Predicting next 4 weekly candles...\n")
 csv_rows = [("timestamp", "color", "confidence", "price")]
-base_time = datetime.now(timezone.utc)
+base_time = datetime.fromtimestamp(get_next_timestamp_by_interval("weekly"), tz=timezone.utc)
 
 for week in range(4):
     timestamp = int((base_time + timedelta(weeks=week)).timestamp())
@@ -99,18 +116,14 @@ for week in range(4):
         confidence = round((0.3 * prob + 0.7 * noise), 2)
 
     direction = "Green" if prob > 0.5 else "Red"
-    price = close  # Do not chain prices week-to-week
+    price = close
 
     print(f"Week {week + 1}: {direction} (Confidence: {confidence:.2f}) → Predicted Price: ${price:.4f}")
     csv_rows.append((timestamp, direction, confidence, round(price, 4)))
 
 # 💾 Save output
-#pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv("weekly_predictions.csv", index=False)
-#pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv(
-#    os.path.expanduser("~/.candles/data/weekly_predictions.csv"), index=False)
-# 💾 Save output to ~/.candles/data/weekly_predictions.csv
-import os
 os.makedirs(os.path.expanduser("~/.candles/data/"), exist_ok=True)
 pd.DataFrame(csv_rows[1:], columns=csv_rows[0]).to_csv(
-    os.path.expanduser("~/.candles/data/weekly_predictions.csv"), index=False)
+    os.path.expanduser("~/.candles/data/weekly_predictions.csv"), index=False
+)
 print("✅ Weekly predictions saved to ~/.candles/data/weekly_predictions.csv")
