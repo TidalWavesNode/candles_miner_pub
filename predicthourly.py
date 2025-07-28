@@ -8,6 +8,28 @@ import requests
 from datetime import datetime, timedelta, timezone
 import pandas as pd
 
+# 🕒 Timestamp alignment function
+def get_next_timestamp_by_interval(interval: str):
+    """
+    Get the next timestamp by interval.
+    """
+    now = datetime.now(timezone.utc)
+
+    match interval:
+        case "hourly":
+            next_timestamp = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+        case "daily":
+            next_timestamp = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        case "weekly":
+            days_until_monday = (7 - now.weekday()) % 7
+            if days_until_monday == 0:
+                days_until_monday = 7
+            next_timestamp = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=days_until_monday)
+        case _:
+            raise ValueError(f"Invalid interval: {interval}")
+
+    return int(next_timestamp.timestamp())
+
 # 🧠 Model
 class CandleNet(nn.Module):
     def __init__(self):
@@ -85,7 +107,7 @@ scaled = scaler.transform(features_array)
 
 # 🔮 Predict
 csv_rows = [("timestamp", "color", "confidence", "price")]
-base_time = datetime.now(timezone.utc)
+base_time = datetime.fromtimestamp(get_next_timestamp_by_interval("hourly"), tz=timezone.utc)
 
 print("🔮 Predicting next 24 hourly candles...\n")
 
