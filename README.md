@@ -152,7 +152,7 @@ Create a CSV file dataset named TVexport.csv with hourly OHLC data. Example form
 
 time,open,high,low,close
 
-A TVexport.csv example has been provided, containing 20,424 samples of hourly candles from various exchanges. You can also export this data from TradingView or any exchange’s API (e.g., Kraken, Coinbase, Binance, MEXC).
+A TVexport.csv example has been provided containing 20,724 hourly candles from 2023-03-03 14:00 UTC to 2025-08-06 15:00 UTC. You can also export this data from TradingView or any exchange’s API (e.g., Kraken, Coinbase, Binance, MEXC).
 
 ## 🛠️ Feature Engineering
 Run the feature generator to add technical features:
